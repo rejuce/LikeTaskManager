@@ -7,7 +7,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_symbol.h>
 #include <qwt_legend.h>
-#include "cpulistwidget.h"
+#include <cpuitemwidget.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LTM; }
@@ -27,7 +27,7 @@ private slots:
 
 
 private:
-    CPUListWidget m_cpuListWidget;
+    CPUItemWidget* CPUListItem;
 
     void setup_cpu_plots();
     void deselectAllCategories();
