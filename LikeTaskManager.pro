@@ -17,24 +17,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     cpuhelpermethods.cpp \
-    cpulistviewitem.cpp \
-    cpulistwidget.cpp \
+    cpuitemwidget.cpp \
     cpustatreader.cpp \
     cpustats.cpp \
     datacolector.cpp \
     diskstatreader.cpp \
+perfitemwidget.cpp \
     main.cpp \
     ltm.cpp
 
 HEADERS += \
     StatReader.h \
     cpuhelpermethods.h \
-    cpulistviewitem.h \
-    cpulistwidget.h \
+    cpuitemwidget.h \
     cpustatreader.h \
     cpustats.h \
     datacolector.h \
     diskstatreader.h \
+perfitemwidget.h \
     ltm.h
 
 FORMS += \
@@ -47,6 +47,7 @@ INCLUDEPATH += /usr/include/qwt
 LIBS += -lqwt-qt5
 
 RESOURCES += qdarkstyle/style.qrc
+RESOURCES += images.qrc
 
 
 # Default rules for deployment.

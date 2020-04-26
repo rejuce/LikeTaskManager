@@ -26,26 +26,6 @@
       <property name="selectionBehavior">
        <enum>QAbstractItemView::SelectItems</enum>
       </property>
-      <item>
-       <property name="text">
-        <string>  </string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>  </string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>  </string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>  </string>
-       </property>
-      </item>
      </widget>
     </item>
     <item>

@@ -5,8 +5,7 @@
 #include "cpustats.h"
 #include <QThread>
 #include <qwt_curve_fitter.h>
-#include "cpulistviewitem.h"
-#include "cpulistwidget.h"
+#include "cpuitemwidget.h"
 #include <QVector>
 #include "cpustatreader.h"
 
@@ -48,15 +47,18 @@ LTM::LTM(QWidget *parent)
 
 //testEntry->set_cpu_clock(20);
  //   ui->listWidget->addItem(rowW);
+    m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
 
-ui->listWidget->setItemWidget( ui->listWidget->item(0), &m_cpuListWidget.widgetO);
-ui->listWidget->item(0)->setSizeHint(m_cpuListWidget.widgetO.sizeHint());
+   m_cpuItemWidgetPtr = new CPUItemWidget("RAM",ui->listWidget);
 
-auto testitem = new CPUListWidget();
+//ui->listWidget->setItemWidget( ui->listWidget->item(0), &m_cpuListWidget.widgetO);
+//ui->listWidget->item(0)->setSizeHint(m_cpuListWidget.widgetO.sizeHint());
+
+//auto testitem = new CPUListWidget();
 
 
-ui->listWidget->setItemWidget( ui->listWidget->item(1), &testitem->widgetO);
-ui->listWidget->item(1)->setSizeHint(testitem->widgetO.sizeHint());
+//ui->listWidget->setItemWidget( ui->listWidget->item(1), &testitem->widgetO);
+//ui->listWidget->item(1)->setSizeHint(testitem->widgetO.sizeHint());
 
 
 //ui->listWidget->item(0)->setFlags(ui->listWidget->item(0)->flags()| Qt::ItemIsSelectable | Qt::ItemIsEnabled);
@@ -163,7 +165,7 @@ void LTM::on_pushButton_clicked()
 
                 else{
                 static int slowCnter = 0;
-                if(slowCnter%5==0) m_cpuListWidget.set_cpu_activity(cpuYPlotData[i][cpuYPlotData[i].size()-1]);
+                if(slowCnter%5==0)     m_cpuItemWidgetPtr->update_data(cpuYPlotData[i][cpuYPlotData[i].size()-1],4);
                 //auto val = cpuYPlotData[i][cpuYPlotData[i].size()-1];
 
                // m_cpuListWidget.m_clockSpeed->setNum(val);
@@ -195,7 +197,7 @@ void LTM::plot_cpu_activity(){
 
             else{
             static int slowCnter = 0;
-            if(slowCnter%5==0) m_cpuListWidget.set_cpu_activity(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1]);
+            if(slowCnter%5==0)     m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
             //auto val = cpuYPlotData[i][cpuYPlotData[i].size()-1];
 
            // m_cpuListWidget.m_clockSpeed->setNum(val);
