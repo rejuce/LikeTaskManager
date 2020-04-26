@@ -49,7 +49,7 @@ LTM::LTM(QWidget *parent)
  //   ui->listWidget->addItem(rowW);
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
 
-   m_cpuItemWidgetPtr = new CPUItemWidget("RAM",ui->listWidget);
+   new CPUItemWidget("RAM",ui->listWidget);
 
 //ui->listWidget->setItemWidget( ui->listWidget->item(0), &m_cpuListWidget.widgetO);
 //ui->listWidget->item(0)->setSizeHint(m_cpuListWidget.widgetO.sizeHint());

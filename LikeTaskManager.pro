@@ -20,7 +20,6 @@ SOURCES += \
     cpuitemwidget.cpp \
     cpustatreader.cpp \
     cpustats.cpp \
-    datacolector.cpp \
     diskstatreader.cpp \
 perfitemwidget.cpp \
     main.cpp \
@@ -32,7 +31,6 @@ HEADERS += \
     cpuitemwidget.h \
     cpustatreader.h \
     cpustats.h \
-    datacolector.h \
     diskstatreader.h \
 perfitemwidget.h \
     ltm.h
