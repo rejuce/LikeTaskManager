@@ -1,10 +1,45 @@
 #include "cpustats.h"
- std::vector<CPUStats::CPUData> CPUStats::m_CurrentEntries;
- std::vector<CPUStats::CPUData> CPUStats::m_PreviousEntries;
+std::vector<CPUStats::CPUData> CPUStats::m_CurrentEntries;
+std::vector<CPUStats::CPUData> CPUStats::m_PreviousEntries;
 
 std::vector<std::pair<std::string, float> > CPUStats::get_cpus_activity()
 {
     std::vector<std::pair<std::string, float> > retvec;
+
+    std::vector<float> current = get_cpus_activity_vector();
+
+
+    if(m_PreviousEntries.size()>0){
+
+
+
+
+        for(size_t i = 0; i < m_CurrentEntries.size(); ++i)
+        {
+
+
+            retvec.emplace_back(std::pair<std::string, float>(m_CurrentEntries[i].cpu,current[i]));
+
+
+        }
+    }
+
+    return retvec;
+
+
+}
+
+std::vector<float> CPUStats::get_cpus_activity_vector()
+{
+    static bool isFirstCall=true;
+
+    if(isFirstCall){
+        ReadStatsCPU(m_CurrentEntries);
+        ReadStatsCPU(m_PreviousEntries);
+        isFirstCall=false;
+    }
+
+    std::vector<float> retvec;
 
     ReadStatsCPU(m_CurrentEntries);
 
@@ -25,7 +60,7 @@ std::vector<std::pair<std::string, float> > CPUStats::get_cpus_activity()
             const float IDLE_TIME	= static_cast<float>(GetIdleTime(e2) - GetIdleTime(e1));
             const float TOTAL_TIME	= ACTIVE_TIME + IDLE_TIME;
 
-            retvec.emplace_back(std::pair<std::string, float>(m_CurrentEntries[i].cpu,100.f * ACTIVE_TIME / TOTAL_TIME));
+            retvec.emplace_back((100.f * ACTIVE_TIME / TOTAL_TIME));
 
 
         }

@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/images">
-        <file>cpu.png</file>
-        <file>ram.png</file>
-    </qresource>
-</RCC>
