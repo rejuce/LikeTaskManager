@@ -21,6 +21,8 @@ SOURCES += \
     cpustatreader.cpp \
     cpustats.cpp \
     diskstatreader.cpp \
+    networkitemwidget.cpp \
+    networkstatreader.cpp \
 perfitemwidget.cpp \
     main.cpp \
     ltm.cpp
@@ -32,6 +34,8 @@ HEADERS += \
     cpustatreader.h \
     cpustats.h \
     diskstatreader.h \
+    networkitemwidget.h \
+    networkstatreader.h \
 perfitemwidget.h \
     ltm.h
 

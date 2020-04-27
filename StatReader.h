@@ -5,6 +5,7 @@
 #include <mutex>
 #include <vector>
 #include <QVector>
+#include <deque>
 
 template<typename T>
 class StatReader {
@@ -23,6 +24,19 @@ public:
     }                                          //!< returns how many disks are monitored
 
     virtual void measure_main_loop()=0;                       //!< collects data for all disk every 100ms, runs until m_quit ist true
+
+    //default filter algorhytm for all the used data
+    void filter_data_deque(std::deque<double>& data){
+
+        size_t k = data.size()-3;
+        for(int n=8; n>=0; n--){
+            //for(int k = +2; k < cpuYPlotData[i].size()-2; k++)
+            data[k] = (data[k-2] + data[k-1] + data[k] +data[k+1] +data[k+2] )/ 5.0;
+            k--;
+
+        }
+    };
+
 
     void start(){
         m_quit=false;

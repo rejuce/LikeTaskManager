@@ -9,6 +9,8 @@
 #include <qwt_legend.h>
 #include "cpuitemwidget.h"
 #include <cpustatreader.h>
+#include "networkitemwidget.h"
+#include "networkstatreader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LTM; }
@@ -26,25 +28,43 @@ private slots:
     void on_pushButton_clicked();
 
     void plot_cpu_activity();
+    void plot_network_activity();
 
 
 
 private:
-    CPUItemWidget* m_cpuItemWidgetPtr;
+    Ui::LTM *ui;
 
+
+    //CPU Stiff
+    CPUItemWidget* m_cpuItemWidgetPtr;
+    CPUStatReader m_CPUStatReaderT;
+    std::unique_ptr<QwtPlotGrid> m_gridCpuPtr;
+    std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataCpuPtrVec;
     void setup_cpu_plots();
+
+    //Network Stuff
+    QVector<NetworkItemWidget*> m_cpuItemWidgetPtrVec;
+    NetworkStatReader m_NetworkStatReaderT;
+    std::unique_ptr<QwtPlotGrid> m_gridNetworkPtr;
+    std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataNetworkPtrVec;
+    void setup_network_plots();
+
+
 
 
     void deselectAllCategories();
     QVector<double> xAchsisBase600;
 
-    CPUStatReader CPUStatReaderT;
 
 
-    std::unique_ptr<QwtPlotGrid> m_gridCpuPtr;
-    std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataCpuPtrVec;
+
+
+
+
+
     //std::vector<std::unique_ptr<QwtCurveFitter>> m_curveFitterPtrVec;
-    Ui::LTM *ui;
+
 
 
 
