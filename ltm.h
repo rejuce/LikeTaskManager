@@ -32,6 +32,8 @@ private slots:
 
 
 
+    void on_listWidget_itemClicked(QListWidgetItem *item);
+
 private:
     Ui::LTM *ui;
 
@@ -44,7 +46,7 @@ private:
     void setup_cpu_plots();
 
     //Network Stuff
-    QVector<NetworkItemWidget*> m_cpuItemWidgetPtrVec;
+    QVector<NetworkItemWidget*> m_EthItemWidgetPtrVec;
     NetworkStatReader m_NetworkStatReaderT;
     std::unique_ptr<QwtPlotGrid> m_gridNetworkPtr;
     std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataNetworkPtrVec;

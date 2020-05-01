@@ -3,8 +3,9 @@
 #include <QBoxLayout>
 #include <QPixmap>
 
-PerfItemWidget::PerfItemWidget(const QString name, QListWidget* view, bool isThreeLined) :
-    QListWidgetItem(view)
+PerfItemWidget::PerfItemWidget(const QString name,PlotType isPlotOn, QListWidget* view, bool isThreeLined) :
+    QListWidgetItem(view),
+    m_isPlottedOn(isPlotOn)
 {
     QWidget* widget = new QWidget(view);
     QGridLayout* layout = new QGridLayout(widget);

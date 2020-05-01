@@ -1,6 +1,6 @@
 #include "cpuitemwidget.h"
 
-CPUItemWidget::CPUItemWidget(const QString name, QListWidget* view) : PerfItemWidget(name,view,false){
+CPUItemWidget::CPUItemWidget(const QString name, QListWidget* view) : PerfItemWidget(name,PlotType::CPU,view,false){
 
 
 }

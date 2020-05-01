@@ -51,10 +51,16 @@ LTM::LTM(QWidget *parent)
  //   ui->listWidget->addItem(rowW);
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
 
+
+
+
+
        new CPUItemWidget("RAM",ui->listWidget);
 
+for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
+    m_EthItemWidgetPtrVec.push_back(new NetworkItemWidget(m_NetworkStatReaderT.getStatData(i).AdapterName,ui->listWidget));
 
- m_cpuItemWidgetPtrVec.push_back(new NetworkItemWidget("lo",ui->listWidget));
+}
 
 //ui->listWidget->setItemWidget( ui->listWidget->item(0), &m_cpuListWidget.widgetO);
 ui->listWidget->item(0)->setSelected(true);
@@ -204,6 +210,9 @@ void LTM::deselectAllCategories()
 
 
 void LTM::on_pushButton_clicked(){
+
+    auto cpuptr = dynamic_cast<CPUItemWidget*>(ui->listWidget->item(0));
+    cpuptr->update_data(454,2222);
 //    while(1){
 //        qApp->processEvents();
 //        auto currentCPU = CPUStats::get_cpus_activity();
@@ -289,25 +298,42 @@ void LTM::plot_network_activity()
     auto& DataVec = m_NetworkStatReaderT.m_DataVec;
 
    // for(size_t i=0; i<DataVec.size(); i++){
+static int slowCnter = 0;
+    for(int i=0; i<DataVec.size(); i++){
 
-       std::lock_guard<std::mutex> lock(m_CPUStatReaderT.m_DataVecMutex);
-
-       static int slowCnter = 0;
-     //  if(slowCnter%5==0)     m_networkItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
+       std::lock_guard<std::mutex> lock(m_NetworkStatReaderT.m_DataVecMutex);
 
 
-           // m_cpuListWidget.m_clockSpeed->setNum(val);
-           // m_curveDataCpuPtrVec[0]->setZ(2);
-            slowCnter++;
+       if(slowCnter%5==0) m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
 
-int i=0;
+
+
         QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
         QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
         m_curveDataNetworkPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
         m_curveDataNetworkPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+
+    }
+       slowCnter++;
+
 
    // }
 
     ui->plotNetwork->replot();
 }
 
+
+void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
+    auto perfItemWidetPtr = dynamic_cast<PerfItemWidget*>(item);
+
+    switch(perfItemWidetPtr->getPlotType()){
+    case PlotType::CPU : ui->stackedWidget->setCurrentIndex(0); break;
+    case PlotType::RAM : ui->stackedWidget->setCurrentIndex(1); break;
+    case PlotType::DISK : ui->stackedWidget->setCurrentIndex(2); break;
+    case PlotType::Ethernet : ui->stackedWidget->setCurrentIndex(3); break;
+    case PlotType::WIFI : ui->stackedWidget->setCurrentIndex(4); break;
+    case PlotType::GPU : ui->stackedWidget->setCurrentIndex(5); break;
+
+
+    }
+}
