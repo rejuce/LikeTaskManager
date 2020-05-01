@@ -4,10 +4,23 @@ NetworkItemWidget::NetworkItemWidget(const QString name, QListWidget* view) : Pe
 {
 m_firstLineTxt->setText(name);
 
+QFont font = m_firstLineTxt->font();
+font.setBold(true);
+m_firstLineTxt->setFont(font);
+
 
 }
 
 void NetworkItemWidget::update_data(int sendKbs, int recKbs)
 {
-    m_secondLineTxt->setText("Rx.: " + QString::number(recKbs,'f',2) + "  Tx.: " + QString::number(sendKbs,'f',2) + " kbit/s");
+    static const QString KBs = " KB/s";
+    static const QString MBs = " MB/s";
+    int& currentRx = recKbs;
+    int currentTx = -sendKbs;
+    QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
+    QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
+
+    m_secondLineTxt->setText("Rx.: " +currentRXstr + "     Tx.: " +currentTxstr);
+
+    //m_secondLineTxt->setText("Rx.: " + QString::number(recKbs,'f',1) + "  Tx.: " + QString::number(-sendKbs,'f',1) + " kbit/s");
 }

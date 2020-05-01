@@ -304,14 +304,39 @@ static int slowCnter = 0;
        std::lock_guard<std::mutex> lock(m_NetworkStatReaderT.m_DataVecMutex);
 
 
-       if(slowCnter%5==0) m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
+       if(slowCnter%5==0) {
+           m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
 
+       }
+
+       int startIndexOfEthernetWidgetItems = ui->listWidget->row(dynamic_cast<QListWidgetItem*>(m_EthItemWidgetPtrVec[0]));
+       int currentRow =  ui->listWidget->currentRow();
+
+       //only if current selected corresnposds to current data index plot and update register
+       if(currentRow>=startIndexOfEthernetWidgetItems &&
+               currentRow< startIndexOfEthernetWidgetItems+m_EthItemWidgetPtrVec.size() &&
+               i == currentRow-startIndexOfEthernetWidgetItems){
+
+        if(slowCnter%5==0) {
+            static const QString KBs = " KB/s";
+            static const QString MBs = " MB/s";
+            double currentRx = *(DataVec[i].currentRxData.end()-8);
+            QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
+            double currentTx = -(*(DataVec[i].currentTxData.end()-8));
+            QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
+
+
+         ui->labRecKbs->setText(currentRXstr) ;
+         ui->labSendKbs->setText(currentTxstr) ;
+        }
 
 
         QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
         QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
         m_curveDataNetworkPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
         m_curveDataNetworkPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+
+       }
 
     }
        slowCnter++;

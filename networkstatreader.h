@@ -4,6 +4,7 @@
 #include <QObject>
 #include <deque>
 #include "StatReader.h"
+#include <QNetworkInterface>
 
 namespace StatTypes{
 struct NetworkData{
@@ -13,6 +14,8 @@ struct NetworkData{
     std::deque<double> currentRxData;        //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of elemen
     qint64 previousTxTotalBytes=0;              //!<as only the total amoutn of bytes can be read, the rate must be calcualted through the two readouts
     qint64 previousRxTotalBytes=0;              //!<as only the total amoutn of bytes can be read, the rate must be calcualted through the two readouts
+    QNetworkInterface::InterfaceType interfaceType;  //!< describes if can, wifi, ehtnertnet etc
+
 };
 
 }
