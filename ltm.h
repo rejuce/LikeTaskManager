@@ -28,7 +28,9 @@ private slots:
     void on_pushButton_clicked();
 
     void plot_cpu_activity();
+
     void plot_network_activity();
+    void update_static_network_info_from(StatTypes::NetworkData& networkData);
 
 
 
@@ -51,6 +53,7 @@ private:
     std::unique_ptr<QwtPlotGrid> m_gridNetworkPtr;
     std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataNetworkPtrVec;
     void setup_network_plots();
+    bool current_network_index_is_slected(int networkindex);  //!> returns true, if networkindex 0...nth Network is selected in the left list WIdget
 
 
 

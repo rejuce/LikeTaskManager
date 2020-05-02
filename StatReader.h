@@ -53,6 +53,8 @@ public:
 protected:
     friend class LTM;
     constexpr static int m_dataPointsPerMinute=600;  //wir machen das abtastinterval nicht varibel, wir wollen alle 100ms eine Messung die 1 Minute ergibt
+    constexpr static int m_widgetDataModulus = 5;
+    constexpr static int m_staticDataModulus = 50;
     QVector<T> m_DataVec;            //!< one element for each device monitored
     std::mutex m_DataVecMutex;
     bool m_quit=false;                   //!< once true, the measurement loop stops

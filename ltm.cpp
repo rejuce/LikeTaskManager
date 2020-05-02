@@ -91,117 +91,7 @@ LTM::~LTM()
     delete ui;
 }
 
-void LTM::setup_cpu_plots()
-{
 
-    m_gridCpuPtr = std::make_unique<QwtPlotGrid>();
-    size_t cputCnt = CPUStats::get_cpu_count();
-
-    for(size_t i=0; i<cputCnt+1; i++){//+ for sum of all
-         m_curveDataCpuPtrVec.emplace_back(std::make_unique<QwtPlotCurve>());
-      //   m_curveFitterPtrVec.emplace_back(std::make_unique<QwtSplineCurveFitter>());
-
-    }
-   // ui->plotCpu->setTitle("");
-   // ui->plotCpu->setCanvasBackground( Qt::white );
-    ui->plotCpu->enableAxis( QwtPlot::yRight,true );
-    ui->plotCpu->enableAxis( QwtPlot::yLeft,false );
-    ui->plotCpu->enableAxis( QwtPlot::xBottom,false );
-    ui->plotCpu->setAxisAutoScale ( QwtPlot::yRight, false );
-    //ui->plotCpu->setAxisAutoScale ( QwtPlot::xBottom, false );
-    ui->plotCpu->setAxisScale ( QwtPlot::yRight, 0,100 );
-    ui->plotCpu->setAxisTitle(QwtPlot::yRight,"Acitivity %");
-
-    m_gridCpuPtr->setPen(QColor::fromRgb(0xEF,0xF0,0xF1));
-    m_gridCpuPtr->attach(ui->plotCpu);
-
-
-    auto get_rnd_color_vec =  [](int count)->QVector<QColor> {
-        QVector<QColor> colors;
-        float currentHue = 0.0;
-        for (int i = 0; i < count; i++){
-            colors.push_back( QColor::fromHslF(currentHue, 1.0, 0.5) );
-            currentHue += 0.618033988749895f;
-            currentHue = std::fmod(currentHue, 1.0f);
-        }
-        return colors;
-    };
-
-auto colovec = get_rnd_color_vec(m_curveDataCpuPtrVec.size());
-int colorindex=0;
-    for(auto& singleCPUCurve : m_curveDataCpuPtrVec){
-
-        singleCPUCurve->attach(ui->plotCpu);
-        singleCPUCurve->setPen(colovec[colorindex], 1.5 );
-       // singleCPUCurve->setStyle( QwtPlotCurve::CurveStyle::Dots);
-        singleCPUCurve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-        singleCPUCurve->setAxes(QwtPlot::xBottom,QwtPlot::yRight);
-        colorindex++;
-    }
-m_curveDataCpuPtrVec[0]->setPen(Qt::white, 4);//cpu sum
-
-    ui->plotCpu->replot();
-
-
-}
-
-void LTM::setup_network_plots(){
-m_gridNetworkPtr = std::make_unique<QwtPlotGrid>();
-
-size_t NetworkCnt = m_NetworkStatReaderT.getDeviceCount();
-
-for(size_t i=0; i<2; i++){ //one curve for each datadeque in StatTypes::NetworkData, one plot for all network interfaces
-     m_curveDataNetworkPtrVec.emplace_back(std::make_unique<QwtPlotCurve>());
-  //   m_curveFitterPtrVec.emplace_back(std::make_unique<QwtSplineCurveFitter>());
-
-}
-// ui->plotCpu->setTitle("");
-// ui->plotCpu->setCanvasBackground( Qt::white );
-ui->plotNetwork->enableAxis( QwtPlot::yRight,true );
-ui->plotNetwork->enableAxis( QwtPlot::yLeft,false );
-ui->plotNetwork->enableAxis( QwtPlot::xBottom,false );
-ui->plotNetwork->setAxisAutoScale ( QwtPlot::yRight, true );
-ui->plotNetwork->axisScaleEngine(QwtPlot::yRight)->setAttribute(QwtScaleEngine::Attribute::Symmetric, false);
-ui->plotNetwork->axisScaleEngine(QwtPlot::yRight)->setMargins(1,1);
-//ui->plotCpu->setAxisAutoScale ( QwtPlot::xBottom, false );
-//ui->plotCpu->setAxisScale ( QwtPlot::yRight, 0,100 );
-ui->plotNetwork->setAxisTitle(QwtPlot::yRight,"KB/s");
-
-m_gridNetworkPtr->setPen(QColor::fromRgb(0xEF,0xF0,0xF1));
-m_gridNetworkPtr->enableYMin(false);
-m_gridNetworkPtr->setYAxis(QwtPlot::yRight);
-m_gridNetworkPtr->attach(ui->plotNetwork);
-
-
-//auto get_rnd_color_vec =  [](int count)->QVector<QColor> {
-//    QVector<QColor> colors;
-//    float currentHue = 0.0;
-//    for (int i = 0; i < count; i++){
-//        colors.push_back( QColor::fromHslF(currentHue, 1.0, 0.5) );
-//        currentHue += 0.618033988749895f;
-//        currentHue = std::fmod(currentHue, 1.0f);
-//    }
-//    return colors;
-//};
-
-//auto colovec = get_rnd_color_vec(m_curveDataCpuPtrVec.size());
-//int colorindex=0;
-for(auto& singleNetworkDataCurve : m_curveDataNetworkPtrVec){
-    singleNetworkDataCurve->attach(ui->plotNetwork);
-   // singleCPUCurve->setStyle( QwtPlotCurve::CurveStyle::Dots);
-    singleNetworkDataCurve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-    singleNetworkDataCurve->setAxes(QwtPlot::xBottom,QwtPlot::yRight);
-}
-
-    m_curveDataNetworkPtrVec[0]->setPen(Qt::green, 3 );
-       m_curveDataNetworkPtrVec[1]->setPen(Qt::red, 3);
-
-
-
-ui->plotNetwork->replot();
-
-
-}
 
 void LTM::deselectAllCategories()
 {
@@ -262,90 +152,7 @@ void LTM::on_pushButton_clicked(){
 
 }
 
-void LTM::plot_cpu_activity(){
 
-    auto& DataVec = m_CPUStatReaderT.m_DataVec;
-
-    for(size_t i=0; i<DataVec.size(); i++){
-
-       std::lock_guard<std::mutex> lock(m_CPUStatReaderT.m_DataVecMutex);
-       if(i>0){
-
-            m_curveDataCpuPtrVec[i]->setZ(0);
-        }
-
-            else{
-            static int slowCnter = 0;
-            if(slowCnter%5==0)     m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
-            //auto val = cpuYPlotData[i][cpuYPlotData[i].size()-1];
-
-           // m_cpuListWidget.m_clockSpeed->setNum(val);
-            m_curveDataCpuPtrVec[0]->setZ(2);
-            slowCnter++;
-        }
-
-        QVector<double> tmpY(DataVec[i].currentActivityData.begin(),DataVec[i].currentActivityData.end());
-        m_curveDataCpuPtrVec[i]->setSamples(xAchsisBase600,tmpY);
-
-    }
-
-    ui->plotCpu->replot();
-
-}
-
-void LTM::plot_network_activity()
-{
-    auto& DataVec = m_NetworkStatReaderT.m_DataVec;
-
-   // for(size_t i=0; i<DataVec.size(); i++){
-static int slowCnter = 0;
-    for(int i=0; i<DataVec.size(); i++){
-
-       std::lock_guard<std::mutex> lock(m_NetworkStatReaderT.m_DataVecMutex);
-
-
-       if(slowCnter%5==0) {
-           m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
-
-       }
-
-       int startIndexOfEthernetWidgetItems = ui->listWidget->row(dynamic_cast<QListWidgetItem*>(m_EthItemWidgetPtrVec[0]));
-       int currentRow =  ui->listWidget->currentRow();
-
-       //only if current selected corresnposds to current data index plot and update register
-       if(currentRow>=startIndexOfEthernetWidgetItems &&
-               currentRow< startIndexOfEthernetWidgetItems+m_EthItemWidgetPtrVec.size() &&
-               i == currentRow-startIndexOfEthernetWidgetItems){
-
-        if(slowCnter%5==0) {
-            static const QString KBs = " KB/s";
-            static const QString MBs = " MB/s";
-            double currentRx = *(DataVec[i].currentRxData.end()-8);
-            QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
-            double currentTx = -(*(DataVec[i].currentTxData.end()-8));
-            QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
-
-
-         ui->labRecKbs->setText(currentRXstr) ;
-         ui->labSendKbs->setText(currentTxstr) ;
-        }
-
-
-        QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
-        QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
-        m_curveDataNetworkPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
-        m_curveDataNetworkPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
-
-       }
-
-    }
-       slowCnter++;
-
-
-   // }
-
-    ui->plotNetwork->replot();
-}
 
 
 void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
@@ -358,7 +165,7 @@ void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
     case PlotType::Ethernet : ui->stackedWidget->setCurrentIndex(3); break;
     case PlotType::WIFI : ui->stackedWidget->setCurrentIndex(4); break;
     case PlotType::GPU : ui->stackedWidget->setCurrentIndex(5); break;
-
-
     }
+
+
 }

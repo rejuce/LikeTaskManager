@@ -2,7 +2,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QThread>
-
+#include <QNetworkInterface>
 
 NetworkStatReader::NetworkStatReader(){
 
@@ -28,6 +28,7 @@ NetworkStatReader::NetworkStatReader(){
 void NetworkStatReader::measure_main_loop()
 {
     while(!m_quit){
+        static int  slowcounter =0;
 
         {//enterign data race critical section
 
@@ -58,6 +59,7 @@ void NetworkStatReader::measure_main_loop()
                 iface.previousRxTotalBytes = currentRxBytes;
                 iface.previousTxTotalBytes = currentTxBytes;
 
+                if(slowcounter%m_staticDataModulus==0) update_static_data(iface);
 
 
             }
@@ -66,6 +68,7 @@ void NetworkStatReader::measure_main_loop()
         emit data_ready();
 
         QThread::msleep(100);
+        slowcounter++;
     }
 }
 
@@ -88,4 +91,81 @@ qint64 NetworkStatReader::read_total_tx_bytes(QString AdapterName)
     qint64 bytecount=0;
     in >> bytecount;
     return bytecount;
+}
+
+StatTypes::WifiLinkStats NetworkStatReader::read_wifi_stats(QString AdapterName)
+{
+    StatTypes::WifiLinkStats ret;
+
+    QFile f("/proc/net/wireless");
+    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&f);
+    while(!in.atEnd()){
+        QString line = in.readLine();
+        if(line.startsWith(AdapterName)){
+            //todo logic
+        }
+    }
+    return ret;
+}
+
+StatTypes::EthernetLinkStats NetworkStatReader::read_ethernet_link_stats(QString AdapterName){
+   StatTypes::EthernetLinkStats ret;
+
+QFile f("/sys/class/net/"+ AdapterName +"/speed");
+f.open(QIODevice::ReadOnly | QIODevice::Text);
+QTextStream in(&f);
+//int speed=0;
+ret.LinkSpeed = in.readLine();
+
+QFile f2("/sys/class/net/"+ AdapterName +"/duplex");
+f2.open(QIODevice::ReadOnly | QIODevice::Text);
+QTextStream in2(&f2);
+//int speed=0;
+ret.LinkMode = in2.readLine();
+
+return ret;
+
+}
+
+void NetworkStatReader::update_static_data(StatTypes::NetworkData& iface){
+
+
+    QNetworkInterface QtInterface = QNetworkInterface::interfaceFromName(iface.AdapterName);
+
+    iface.interfaceType = QtInterface.type();
+    if(iface.interfaceType == QNetworkInterface::InterfaceType::Ethernet){
+        auto ethLinkStat = read_ethernet_link_stats(iface.AdapterName);
+        iface.speedLinkInfo = ethLinkStat.LinkSpeed + " / " + ethLinkStat.LinkMode;
+    }
+    else if(iface.interfaceType == QNetworkInterface::InterfaceType::Wifi){
+
+        //todo
+    }
+
+
+    iface.hwAddress= QtInterface.hardwareAddress();
+
+    auto addressList = QtInterface.addressEntries();
+
+    iface.ip4Addresses.clear();
+    iface.ip6Addresses.clear();
+
+    for(auto& networkAddressEntry : addressList){
+        auto currentIPadr = networkAddressEntry.ip();
+        QPair<QHostAddress, int> curentIP = QHostAddress::parseSubnet(currentIPadr.toString()+"/"+networkAddressEntry.netmask().toString());
+
+        if(currentIPadr.protocol()==QAbstractSocket::IPv4Protocol){
+            iface.ip4Addresses.push_back(currentIPadr.toString()+"/"+QString::number(curentIP.second) );
+        }
+        else if (currentIPadr.protocol()==QAbstractSocket::IPv6Protocol){
+            iface.ip6Addresses.push_back(currentIPadr.toString()+"/"+QString::number(curentIP.second) );
+        }
+
+    }
+
+
+
+
+
 }

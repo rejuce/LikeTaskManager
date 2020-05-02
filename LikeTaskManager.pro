@@ -21,6 +21,8 @@ SOURCES += \
     cpustatreader.cpp \
     cpustats.cpp \
     diskstatreader.cpp \
+    ltm_cpu.cpp \
+    ltm_network.cpp \
     networkitemwidget.cpp \
     networkstatreader.cpp \
 perfitemwidget.cpp \
