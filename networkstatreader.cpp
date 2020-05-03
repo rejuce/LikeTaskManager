@@ -76,8 +76,8 @@ qint64 NetworkStatReader::read_total_rx_bytes(QString AdapterName){
     QFile f("/sys/class/net/"+ AdapterName +"/statistics/rx_bytes");
     f.open(QIODevice::ReadOnly | QIODevice::Text );
     QTextStream in(&f);
-     qint64 bytecount=0;
-   // QString line = in.readLine();
+    qint64 bytecount=0;
+    // QString line = in.readLine();
     in >> bytecount;
     return bytecount;
 
@@ -99,32 +99,44 @@ StatTypes::WifiLinkStats NetworkStatReader::read_wifi_stats(QString AdapterName)
 
     QFile f("/proc/net/wireless");
     f.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&f);
-    while(!in.atEnd()){
+    if(f.isOpen()){
+        QTextStream in(&f);
+
         QString line = in.readLine();
-        if(line.startsWith(AdapterName)){
-            //todo logic
+       while(!line.isNull()){
+
+            if(line.startsWith(AdapterName)){
+                auto stringlist = line.split("  ");
+                ret.MBs = stringlist.at(1);
+                ret.MBs.chop(1);
+                ret.dB = stringlist.at(2);
+                ret.dB.chop(1);
+                ret.noise = stringlist.at(3);
+
+            }
+           line = in.readLine();
+           line.remove(0,2); //somehow the line with dapater name starts with space...
         }
     }
     return ret;
 }
 
 StatTypes::EthernetLinkStats NetworkStatReader::read_ethernet_link_stats(QString AdapterName){
-   StatTypes::EthernetLinkStats ret;
+    StatTypes::EthernetLinkStats ret;
 
-QFile f("/sys/class/net/"+ AdapterName +"/speed");
-f.open(QIODevice::ReadOnly | QIODevice::Text);
-QTextStream in(&f);
-//int speed=0;
-ret.LinkSpeed = in.readLine();
+    QFile f("/sys/class/net/"+ AdapterName +"/speed");
+    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&f);
+    //int speed=0;
+    ret.LinkSpeed = in.readLine();
 
-QFile f2("/sys/class/net/"+ AdapterName +"/duplex");
-f2.open(QIODevice::ReadOnly | QIODevice::Text);
-QTextStream in2(&f2);
-//int speed=0;
-ret.LinkMode = in2.readLine();
+    QFile f2("/sys/class/net/"+ AdapterName +"/duplex");
+    f2.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in2(&f2);
+    //int speed=0;
+    ret.LinkMode = in2.readLine();
 
-return ret;
+    return ret;
 
 }
 
@@ -140,7 +152,8 @@ void NetworkStatReader::update_static_data(StatTypes::NetworkData& iface){
     }
     else if(iface.interfaceType == QNetworkInterface::InterfaceType::Wifi){
 
-        //todo
+        auto stats = read_wifi_stats(iface.AdapterName);
+        iface.speedLinkInfo = stats.MBs + QString(" MB/s  SingalLv: ") + stats.dB + QString(" dB  Noise: "+ stats.noise );
     }
 
 
