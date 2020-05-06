@@ -64,6 +64,7 @@ for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
 
 //ui->listWidget->setItemWidget( ui->listWidget->item(0), &m_cpuListWidget.widgetO);
 ui->listWidget->item(0)->setSelected(true);
+on_listWidget_itemClicked(ui->listWidget->item(0));
 //auto testitem = new CPUListWidget();
 
 
