@@ -23,11 +23,14 @@ SOURCES += \
     diskstatreader.cpp \
     ltm_cpu.cpp \
     ltm_network.cpp \
+    ltm_ram.cpp \
     networkitemwidget.cpp \
     networkstatreader.cpp \
 perfitemwidget.cpp \
     main.cpp \
-    ltm.cpp
+    ltm.cpp \
+    ramitemwidget.cpp \
+    ramstatreader.cpp
 
 HEADERS += \
     StatReader.h \
@@ -39,7 +42,9 @@ HEADERS += \
     networkitemwidget.h \
     networkstatreader.h \
 perfitemwidget.h \
-    ltm.h
+    ltm.h \
+    ramitemwidget.h \
+    ramstatreader.h
 
 FORMS += \
     ltm.ui
