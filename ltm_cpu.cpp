@@ -71,6 +71,8 @@ m_curveDataCpuPtrVec[0]->setPen(Qt::white, 4);//cpu sum
 
 
 
+
+
 void LTM::plot_cpu_activity(){
 
     auto& DataVec = m_CPUStatReaderT.m_DataVec;
@@ -101,5 +103,7 @@ void LTM::plot_cpu_activity(){
     ui->plotCpu->replot();
 
 }
+
+
 
 

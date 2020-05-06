@@ -9,6 +9,7 @@
 #include <QVector>
 #include "cpustatreader.h"
 #include <qwt_scale_engine.h>
+#include "ramitemwidget.h"
 
 
 LTM::LTM(QWidget *parent)
@@ -55,7 +56,7 @@ LTM::LTM(QWidget *parent)
 
 
 
-       new CPUItemWidget("RAM",ui->listWidget);
+     m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
 
 for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
     m_EthItemWidgetPtrVec.push_back(new NetworkItemWidget(m_NetworkStatReaderT.getStatData(i).AdapterName,ui->listWidget));
