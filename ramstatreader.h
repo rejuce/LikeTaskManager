@@ -11,8 +11,8 @@ namespace StatTypes{
 struct RamData{
     //  inline CPUData(int dataPointsPerMinute) : currentActivityData(dataPointsPerMinute,0.0),currentClockSpeed(dataPointsPerMinute,0.0){}
     QString AdapterName;                     //!< name of the memory
-    std::deque<int> currentUsage;        //!< vector that always holds one minute of datapoints of cpu activity data, constant ammoutn of element
-    std::deque<int> currentSwap;        //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of elemen
+    std::deque<double> currentUsage;        //!< vector that always holds one minute of datapoints of cpu activity data, constant ammoutn of element
+    std::deque<double> currentSwap;        //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of elemen
     int RamSizeKiB = 0;                  //!<hold max size of installed memory
     int SwapSizeKiB = 0;                 //!<hold max size of mounted swap space , also relfects if swapfile gets mounted /unmounted
 };
