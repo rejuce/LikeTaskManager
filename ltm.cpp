@@ -27,20 +27,30 @@ LTM::LTM(QWidget *parent)
 
     setup_cpu_plots();
     setup_network_plots();
+    setup_ram_plots();
 
     for(double i=0.0; i<600; i++){
         xAchsisBase600.push_back(i);
 
     }
 
+
+
+
     if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "connectione stabilsed";
+        qDebug()<< "cpu stat reader stabilsed";
 
     m_CPUStatReaderT.start();
 
 
+    if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "ram stat reader stabilsed";
+
+    m_RamStatReaderT.start();
+
+
     if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "connectione stabilsed";
+        qDebug()<< "network stat reader stabilsed";
 
     m_NetworkStatReaderT.start();
 
