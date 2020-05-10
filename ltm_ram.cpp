@@ -65,26 +65,36 @@ void LTM::setup_ram_plots()
     m_curveDataRamPtrVec[0]->setBrush(col);
     m_curveDataRamPtrVec[1]->setPen(Qt::darkGreen, 3);
 
-
+    ui->labMemHeader->setText(QString::number(m_RamStatReaderT.m_DataVec[0].RamSizeKiB*9.53674e-7,'f',1)+ " GiB");
 
     ui->plotRam->replot();
 }
 
 void LTM::plot_ram_activity()
 {
+static int slowCnter =0;
 
     auto& DataVec = m_RamStatReaderT.m_DataVec;
 
     // for(size_t i=0; i<DataVec.size(); i++){
-    static int slowCnter = 0;
+
     for(int i=0; i<DataVec.length(); i++){
 
         std::lock_guard<std::mutex> lock(m_RamStatReaderT.m_DataVecMutex);
 
 
-       // if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
-      //      m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
-     //   }
+        if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
+            double usedGib = DataVec[i].currentUsage.back()*DataVec[i].RamSizeKiB*9.53674e-7/100;
+            double totalGib= DataVec[i].RamSizeKiB*9.53674e-7;
+            m_RamItemWidgetPtr->update_data(usedGib, totalGib);
+
+           ui->labMemory->setText(QString::number(usedGib,'f',1) + " GiB (" +  QString::number(usedGib/totalGib*100,'f',1) + "%) of " + QString::number(totalGib,'f',1) + " GiB");
+
+            double usedSwapGib = DataVec[i].currentSwap.back()*DataVec[i].SwapSizeKiB*9.53674e-7/100;
+            double totalSwapGib= DataVec[i].SwapSizeKiB*9.53674e-7;
+            ui->labSwap->setText(QString::number(usedSwapGib,'f',1) + " GiB (" +  QString::number(usedSwapGib/totalSwapGib*100,'f',1) + "%) of " + QString::number(totalSwapGib,'f',1) + " GiB");
+
+        }
 
 
             QVector<double> tmpRam(DataVec[i].currentUsage.begin(),DataVec[i].currentUsage.end()-8);
@@ -95,7 +105,7 @@ void LTM::plot_ram_activity()
         }
 
 
-  //  slowCnter++;
+    slowCnter++;
 
 
     // }

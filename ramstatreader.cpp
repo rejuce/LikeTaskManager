@@ -48,7 +48,7 @@ void RamStatReader::measure_main_loop()
             QString line = in.readLine();
             while(!line.isNull()){
                 std::lock_guard<std::mutex> lck(m_DataVecMutex);
-                if(line.startsWith("MemFree")){
+                if(line.startsWith("MemAvailable")){
                     auto stringlist = line.split(" ");
                     m_DataVec[0].currentUsage.pop_front();
                     m_DataVec[0].currentUsage.push_back(100*(m_DataVec[0].RamSizeKiB-stringlist.at(stringlist.size()-2).toInt())/m_DataVec[0].RamSizeKiB); //* 9.53674E-7;//9.3132257461548E-7;

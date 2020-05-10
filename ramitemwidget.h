@@ -8,7 +8,7 @@ class RamItemWidget : public PerfItemWidget
 
 public:
     RamItemWidget(const QString name, QListWidget* view);
-    void update_data(int used, int maxram);
+    void update_data(double used, double total);
 };
 
 #endif // RAMITEMWIDGET_H
