@@ -20,7 +20,7 @@ pipeline {
            steps {
               // sh 'svn update --accept tf /home/jk/qtprojects/${project}/src'                        
                 dir ("/home/jk/qtprojects/${project}/src") {
-                   sh 'git pull'
+                   sh 'git pull origin master'
                }
 		dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
                    sh 'make clean -j${core_count}'
