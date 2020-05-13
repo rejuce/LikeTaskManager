@@ -37,7 +37,7 @@ private slots:
     void update_static_network_info_from(StatTypes::NetworkData& networkData);
 
 
-
+    void selfUpdate();
 
     void on_listWidget_itemClicked(QListWidgetItem *item);
 

@@ -19,6 +19,7 @@ LTM::LTM(QWidget *parent)
 {
     ui->setupUi(this);
 
+    connect(ui->actionUpdate,&QAction::triggered,this, &LTM::selfUpdate);
 
    // for(size_t i=0; i<cputCnt+1; i++){
    // m_curveDataCpuPtrVec[i]->setCurveFitter(m_curveFitterPtrVec[i].get());
@@ -179,5 +180,12 @@ void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
     case PlotType::GPU : ui->stackedWidget->setCurrentIndex(5); break;
     }
 
+
+}
+
+
+void LTM::selfUpdate()
+{
+    qDebug() << "self update";
 
 }
