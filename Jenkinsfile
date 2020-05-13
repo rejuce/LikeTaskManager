@@ -19,12 +19,14 @@ pipeline {
        stage('make clean') {
            steps {
               // sh 'svn update --accept tf /home/jk/qtprojects/${project}/src'                        
-                dir ("/home/jk/qtprojects/${project}/src") {
-                   sh 'git pull origin master'
-               }
-		dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
+                dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
                    sh 'make clean -j${core_count}'
                }
+		   
+		dir ("/home/jk/qtprojects/${project}/src") {
+                   sh 'git pull origin master'
+               }
+
            }
        }
        stage('qmake') {
