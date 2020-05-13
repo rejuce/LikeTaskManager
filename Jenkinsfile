@@ -57,6 +57,9 @@ pipeline {
        stage('copy files') {
            steps {
               
+		dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
+                   sh 'ifconfig'
+               }
              //  sh 'rsync /home/jk/qtprojects/${project}/appimgstageing/${appimage_name}-x86_64.AppImage fileupload@192.168.57.10:/var/www/data'
              //  sh 'rsync /home/jk/qtprojects/${project}/appimgstageing/${appimage_name}-x86_64.AppImage.zsync fileupload@192.168.57.10:/var/www/data'
  
