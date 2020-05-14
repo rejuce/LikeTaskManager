@@ -13,6 +13,8 @@
 #include "networkstatreader.h"
 #include "ramitemwidget.h"
 #include "ramstatreader.h"
+#include "diskstatreader.h"
+#include "diskitemwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LTM; }
@@ -36,6 +38,7 @@ private slots:
     void plot_network_activity();
     void update_static_network_info_from(StatTypes::NetworkData& networkData);
 
+    void plot_disk_activity();
 
     void selfUpdate();
 
@@ -59,6 +62,14 @@ private:
     std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataRamPtrVec;
     void setup_ram_plots();
 
+
+    //Disk Stuff
+    QVector<DiskItemWidget*> m_DiskItemWidgetPtrVec;
+    DiskStatReader m_DiskStatReaderT;
+    std::unique_ptr<QwtPlotGrid> m_gridDiskPtr;
+    std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataDiskPtrVec;
+    void setup_disk_plots();
+    bool current_disk_index_is_slected(int diskindex);  //!> returns true,
 
     //Network Stuff
     QVector<NetworkItemWidget*> m_EthItemWidgetPtrVec;

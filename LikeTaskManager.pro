@@ -20,8 +20,10 @@ SOURCES += \
     cpuitemwidget.cpp \
     cpustatreader.cpp \
     cpustats.cpp \
+    diskitemwidget.cpp \
     diskstatreader.cpp \
     ltm_cpu.cpp \
+    ltm_disk.cpp \
     ltm_network.cpp \
     ltm_ram.cpp \
     networkitemwidget.cpp \
@@ -38,6 +40,7 @@ HEADERS += \
     cpuitemwidget.h \
     cpustatreader.h \
     cpustats.h \
+    diskitemwidget.h \
     diskstatreader.h \
     networkitemwidget.h \
     networkstatreader.h \
