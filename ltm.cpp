@@ -29,6 +29,7 @@ LTM::LTM(QWidget *parent)
     setup_cpu_plots();
     setup_network_plots();
     setup_ram_plots();
+    setup_disk_plots();
 
     for(double i=0.0; i<600; i++){
         xAchsisBase600.push_back(i);
@@ -75,6 +76,12 @@ LTM::LTM(QWidget *parent)
 
      m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
 
+
+     for(int i=0; i<m_DiskStatReaderT.getDeviceCount(); i++){
+         m_DiskItemWidgetPtrVec.push_back(new DiskItemWidget(m_DiskStatReaderT.getStatData(i).diskType,m_DiskStatReaderT.getStatData(i).diskName,ui->listWidget));
+
+     }
+
 for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
     m_EthItemWidgetPtrVec.push_back(new NetworkItemWidget(m_NetworkStatReaderT.getStatData(i).AdapterName,ui->listWidget));
 
@@ -99,10 +106,10 @@ on_listWidget_itemClicked(ui->listWidget->item(0));
  //   ui->listWidget->setCurrentRow(2);
 //auto ptr = dynamic_cast<CPUListViewItem*>(ui->listWidget->item(2));
 //ptr->set_cpu_clock(20);
-       auto test =  ui->listWidget->currentRow();
+       //uto test =  ui->listWidget->currentRow();
   // dynamic_cast<CPUListViewItem*>(ui->listWidget->currentItem())->set_cpu_clock(99);
      //ui->listWidget->item(2)->setSelected(true);
-test++;
+//test++;
 }
 
 LTM::~LTM()

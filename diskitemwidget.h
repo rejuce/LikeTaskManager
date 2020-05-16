@@ -6,7 +6,7 @@
 class DiskItemWidget : public PerfItemWidget
 {
 public:
-    DiskItemWidget(const QString name, QListWidget* view);
+    DiskItemWidget(const QString type,const QString name, QListWidget* view);
     void update_data(double activity, double io);
 };
 

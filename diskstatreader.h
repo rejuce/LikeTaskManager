@@ -24,14 +24,16 @@ struct rawDiskStat{
 
     struct DiskData{
         QString diskName;                       //!< name of the disk, exmp /dev/sda
+        QString diskType;
         std::deque<double> currentActivityData;        //!< vector that always holds one minute of datapoints of disk activity data, constant ammoutn of element
-        std::deque<double> currentReadKBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
-        std::deque<double> currentWriteKBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
+        std::deque<double> currentReadKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
+        std::deque<double> currentWriteKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
         double averageReplyDelay=0.0;
         //https://www.percona.com/doc/percona-toolkit/2.1/pt-diskstats.html
         rawDiskStat previousStats;              //from previous time timepoint
         rawDiskStat currentStats;
         bool firstIteration = true;  // must be used to ensure no overflow on first timeinterval
+
 
        };
 

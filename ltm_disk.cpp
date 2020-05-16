@@ -118,7 +118,7 @@ void LTM::plot_disk_activity()
 
 
 //        //only if current selected corresnposds to current data index plot and update register
-//        if(current_disk_index_is_slected(i)){
+        if(current_disk_index_is_slected(i)){
 
 //            if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
 //                static const QString KBs = " KB/s";
@@ -157,12 +157,14 @@ void LTM::plot_disk_activity()
 
 
 
-//            QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
-//            QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
-//            m_curveDatadiskPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
-//            m_curveDatadiskPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+            QVector<double> tmpRxY(DataVec[i].currentReadKiBsData.begin(),DataVec[i].currentReadKiBsData.end()-8);
+            QVector<double> tmpTxY(DataVec[i].currentWriteKiBsData.begin(),DataVec[i].currentWriteKiBsData.end()-8);
+            QVector<double> tmpActive(DataVec[i].currentActivityData.begin(),DataVec[i].currentActivityData.end()-8);
+            m_curveDataDiskPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
+            m_curveDataDiskPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+            m_curveDataDiskPtrVec[2]->setSamples(xAchsisBase600,tmpActive);
 
-//        }
+        }
 
     }
 //    slowCnter++;
