@@ -50,6 +50,12 @@ LTM::LTM(QWidget *parent)
     m_RamStatReaderT.start();
 
 
+    if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "disk stat reader stabilsed";
+
+    m_DiskStatReaderT.start();
+
+
     if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
         qDebug()<< "network stat reader stabilsed";
 

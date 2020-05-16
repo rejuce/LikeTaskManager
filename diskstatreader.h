@@ -10,7 +10,17 @@
 
 namespace StatTypes{
 
-
+struct rawDiskStat{
+    int secRead=0;
+    int secWrite=0;
+    int IOTime=0;
+    int readsComplete=0;
+    int readsMerged=0;
+    int readTimeMs=0;
+    int writeComplete=0;
+    int writeMerged=0;
+    int writeTimeMs=0;
+};
 
     struct DiskData{
         QString diskName;                       //!< name of the disk, exmp /dev/sda
@@ -18,7 +28,14 @@ namespace StatTypes{
         std::deque<double> currentReadKBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
         std::deque<double> currentWriteKBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
         double averageReplyDelay=0.0;
-    };              //!<hold max size of mounted swap space , also relfects if swapfile gets mounted /unmounted
+        //https://www.percona.com/doc/percona-toolkit/2.1/pt-diskstats.html
+        rawDiskStat previousStats;              //from previous time timepoint
+        rawDiskStat currentStats;
+        bool firstIteration = true;  // must be used to ensure no overflow on first timeinterval
+
+       };
+
+
 
 }
 
@@ -37,6 +54,10 @@ public:
 
 signals:
     void data_ready();
+
+private:
+    void update_disk_list();
+    StatTypes::DiskData* find_disk_name_in_data(QString name);  //!< looks for supplied disk name in data vector, if not foudn return nullptr
 
 
 };
