@@ -10,3 +10,10 @@ DiskItemWidget::DiskItemWidget(const QString type, const QString name, QListWidg
     m_firstLineTxt->setFont(font);
 
 }
+
+void DiskItemWidget::update_data(QString read, QString write,  QString active)
+{
+ m_secondLineTxt->setText("Rd.: " +read + "     Wd.: " +write + " ("+active +"%)");
+
+
+}

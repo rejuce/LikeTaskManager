@@ -678,7 +678,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Send (Tx)</string>
+                <string>Write Rate</string>
                </property>
                <property name="indent">
                 <number>0</number>
@@ -686,7 +686,7 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QLabel" name="labSendKbs_2">
+              <widget class="QLabel" name="labDiskWrite">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                  <horstretch>20</horstretch>
@@ -717,7 +717,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Receive (Rx)</string>
+                <string>Read Rate</string>
                </property>
                <property name="indent">
                 <number>0</number>
@@ -741,7 +741,7 @@
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QLabel" name="labRecKbs_2">
+              <widget class="QLabel" name="labDiskRead">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                  <horstretch>20</horstretch>

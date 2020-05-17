@@ -17,10 +17,10 @@ void NetworkItemWidget::update_data(int sendKbs, int recKbs)
     static const QString MBs = " MB/s";
     int& currentRx = recKbs;
     int currentTx = -sendKbs;
-    QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
-    QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
+    QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',0) + KBs : QString::number(currentRx/1000.0,'f',0) + MBs;
+    QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',0) + KBs : QString::number(currentTx/1000.0,'f',0) + MBs;
 
-    m_secondLineTxt->setText("Rx.: " +currentRXstr + "     Tx.: " +currentTxstr);
+    m_secondLineTxt->setText("Rx.: " +currentRXstr + "   Tx.: " +currentTxstr);
 
     //m_secondLineTxt->setText("Rx.: " + QString::number(recKbs,'f',1) + "  Tx.: " + QString::number(-sendKbs,'f',1) + " kbit/s");
 }

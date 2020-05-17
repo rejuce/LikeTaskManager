@@ -34,8 +34,8 @@ void LTM::setup_disk_plots(){
     ui->plotDisk->setAxisTitle(QwtPlot::yRight,"KB/s");
 
 
-    ui->plotCpu->setAxisAutoScale ( QwtPlot::yLeft, false );
-    ui->plotCpu->setAxisScale ( QwtPlot::yLeft, 0,100 );
+    ui->plotDisk->setAxisAutoScale ( QwtPlot::yLeft, false );
+    ui->plotDisk->setAxisScale ( QwtPlot::yLeft, 0,100 );
     ui->plotDisk->setAxisTitle(QwtPlot::yLeft,"Activity %");
 
 
@@ -108,11 +108,23 @@ void LTM::plot_disk_activity()
     for(int i=0; i<DataVec.size(); i++){
 
         std::lock_guard<std::mutex> lock(m_DiskStatReaderT.m_DataVecMutex);
+QString currentWriteStr;
+QString currentReadStr;
 
-
-      //  if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
+        if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
        //     m_DiskItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
-      //  }
+            static const QString KBs = " KiB/s";
+            static const QString MBs = " MiB/s";
+            double currentWrite = *(DataVec[i].currentWriteKiBsData.end()-8);
+             currentWriteStr = (currentWrite<1000) ? QString::number(currentWrite,'f',0) + KBs : QString::number(currentWrite/1024.0,'f',0) + MBs;
+            double currentRead = (*(DataVec[i].currentReadKiBsData.end()-8));
+             currentReadStr = (currentRead<1000) ? QString::number(currentRead,'f',0) + KBs : QString::number(currentRead/1024.0,'f',0) + MBs;
+
+
+            m_DiskItemWidgetPtrVec[i]->update_data(currentReadStr,currentWriteStr,QString::number(*(DataVec[i].currentActivityData.end()-8),'f',0) );
+
+
+        }
 
 
 
@@ -120,18 +132,11 @@ void LTM::plot_disk_activity()
 //        //only if current selected corresnposds to current data index plot and update register
         if(current_disk_index_is_slected(i)){
 
-//            if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
-//                static const QString KBs = " KB/s";
-//                static const QString MBs = " MB/s";
-//                double currentRx = *(DataVec[i].currentRxData.end()-8);
-//                QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
-//                double currentTx = -(*(DataVec[i].currentTxData.end()-8));
-//                QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
+            if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
 
-
-//                ui->labRecKbs->setText(currentRXstr) ;
-//                ui->labSendKbs->setText(currentTxstr) ;
-//            }
+                ui->labDiskRead->setText(currentReadStr) ;
+                ui->labDiskWrite->setText(currentWriteStr) ;
+            }
 
 
 //            if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
@@ -155,11 +160,35 @@ void LTM::plot_disk_activity()
 
 //            }
 
+    double maxR = *std::max_element(DataVec[i].currentReadKiBsData.begin(), DataVec[i].currentReadKiBsData.end());
+    double maxW = *std::max_element(DataVec[i].currentWriteKiBsData.begin(), DataVec[i].currentWriteKiBsData.end());
+    double scaleFactor = 1; //output in KiB
+
+    if(maxR<1000 && maxW < 1000){
+        scaleFactor=1;
+        ui->plotDisk->setAxisTitle(QwtPlot::yRight,"KiB/s");
+    }
+    else if(maxR>1000 || maxW > 1000){
+        scaleFactor=1024;
+        ui->plotDisk->setAxisTitle(QwtPlot::yRight,"MiB/s");
+    }
+
+
 
 
             QVector<double> tmpRxY(DataVec[i].currentReadKiBsData.begin(),DataVec[i].currentReadKiBsData.end()-8);
             QVector<double> tmpTxY(DataVec[i].currentWriteKiBsData.begin(),DataVec[i].currentWriteKiBsData.end()-8);
+
+            for(auto& dp : tmpRxY)
+                dp=-dp/scaleFactor;
+
+            for(auto& dp : tmpTxY)
+                dp=dp/scaleFactor;
+
             QVector<double> tmpActive(DataVec[i].currentActivityData.begin(),DataVec[i].currentActivityData.end()-8);
+
+
+
             m_curveDataDiskPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
             m_curveDataDiskPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
             m_curveDataDiskPtrVec[2]->setSamples(xAchsisBase600,tmpActive);
@@ -167,7 +196,7 @@ void LTM::plot_disk_activity()
         }
 
     }
-//    slowCnter++;
+    slowCnter++;
 
 
     // }

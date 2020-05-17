@@ -44,16 +44,16 @@ void DiskStatReader::measure_main_loop()
 
                     std::lock_guard<std::mutex> lck(m_DataVecMutex);
                     dataptr->currentReadKiBsData.pop_front();
-                    dataptr->currentReadKiBsData.push_back(2*(dataptr->currentStats.secRead-dataptr->previousStats.secRead)/m_intervallMs/1024.0*1000);
+                    dataptr->currentReadKiBsData.push_back(512*(dataptr->currentStats.secRead-dataptr->previousStats.secRead)/m_intervallMs/1024.0*1000);
 
                     dataptr->currentWriteKiBsData.pop_front();
-                    dataptr->currentWriteKiBsData.push_back(2*(dataptr->currentStats.secWrite-dataptr->previousStats.secWrite)/m_intervallMs/1024.0*1000);
+                    dataptr->currentWriteKiBsData.push_back(512*(dataptr->currentStats.secWrite-dataptr->previousStats.secWrite)/m_intervallMs/1024.0*1000);
 
                     dataptr->currentActivityData.pop_front();
                     dataptr->currentActivityData.push_back(100*(dataptr->currentStats.IOTime-dataptr->previousStats.IOTime)/m_intervallMs);
 
-                    //filter_data_deque(dataptr->currentReadKiBsData);
-                   // filter_data_deque( dataptr->currentWriteKiBsData);
+                    filter_data_deque(dataptr->currentReadKiBsData);
+                    filter_data_deque( dataptr->currentWriteKiBsData);
                     filter_data_deque( dataptr->currentActivityData);
 
 
