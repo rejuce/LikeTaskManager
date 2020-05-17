@@ -57,6 +57,28 @@ void DiskStatReader::measure_main_loop()
                     filter_data_deque( dataptr->currentActivityData);
 
 
+                    int dReadComplete =  (dataptr->currentStats.readsComplete - dataptr->previousStats.readsComplete);
+                    int dWriteComplete =  (dataptr->currentStats.writeComplete - dataptr->previousStats.writeComplete);
+
+                    dataptr->currentIOPS = ((  dReadComplete +dWriteComplete)/m_intervallMs)*1000;
+
+                    int dReadMerged =  (dataptr->currentStats.readsMerged - dataptr->previousStats.readsMerged);
+                    int dWriteMerged =  (dataptr->currentStats.writeMerged - dataptr->previousStats.writeMerged);
+                    int dReadTime=  (dataptr->currentStats.readTimeMs - dataptr->previousStats.readTimeMs);
+                    int dWriteTime =  (dataptr->currentStats.writeTimeMs - dataptr->previousStats.writeTimeMs);
+
+
+                    double readRespTime=0.0;
+                    if((dReadComplete !=0 || dReadMerged !=0)  ){
+                       readRespTime= (dReadTime/(dReadComplete+dReadMerged));
+                    }
+
+                    double writeRespTime=0.0;
+                    if( (dWriteMerged !=0  || dWriteComplete !=0)){
+                        writeRespTime = (dWriteTime/(dWriteComplete+dWriteMerged));
+                    }
+
+                    dataptr->averageRWRespTime = (readRespTime+writeRespTime)/2.0;
 
                     dataptr->previousStats = dataptr->currentStats;
 

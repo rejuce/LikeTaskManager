@@ -28,7 +28,9 @@ struct rawDiskStat{
         std::deque<double> currentActivityData;        //!< vector that always holds one minute of datapoints of disk activity data, constant ammoutn of element
         std::deque<double> currentReadKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
         std::deque<double> currentWriteKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
-        double averageReplyDelay=0.0;
+        double averageRWRespTime=0.0;
+        double currentIOPS=0.0;                         //!< some of all completed read/write requests in one intervall
+
         //https://www.percona.com/doc/percona-toolkit/2.1/pt-diskstats.html
         rawDiskStat previousStats;              //from previous time timepoint
         rawDiskStat currentStats;

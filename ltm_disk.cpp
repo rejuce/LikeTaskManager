@@ -108,8 +108,9 @@ void LTM::plot_disk_activity()
     for(int i=0; i<DataVec.size(); i++){
 
         std::lock_guard<std::mutex> lock(m_DiskStatReaderT.m_DataVecMutex);
-QString currentWriteStr;
-QString currentReadStr;
+static QString currentWriteStr;
+static QString currentReadStr;
+static QString activeStr;
 
         if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
        //     m_DiskItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
@@ -119,9 +120,11 @@ QString currentReadStr;
              currentWriteStr = (currentWrite<1000) ? QString::number(currentWrite,'f',0) + KBs : QString::number(currentWrite/1024.0,'f',0) + MBs;
             double currentRead = (*(DataVec[i].currentReadKiBsData.end()-8));
              currentReadStr = (currentRead<1000) ? QString::number(currentRead,'f',0) + KBs : QString::number(currentRead/1024.0,'f',0) + MBs;
+             double active = *(DataVec[i].currentActivityData.end()-8);
+             activeStr = QString::number(active,'f',0);
 
 
-            m_DiskItemWidgetPtrVec[i]->update_data(currentReadStr,currentWriteStr,QString::number(*(DataVec[i].currentActivityData.end()-8),'f',0) );
+            m_DiskItemWidgetPtrVec[i]->update_data(currentReadStr,currentWriteStr,activeStr );
 
 
         }
@@ -136,6 +139,9 @@ QString currentReadStr;
 
                 ui->labDiskRead->setText(currentReadStr) ;
                 ui->labDiskWrite->setText(currentWriteStr) ;
+                ui->labActive->setText(activeStr+"%");
+                ui->labRespT->setText(QString::number(DataVec[i].averageRWRespTime,'f',1)+" ms");
+                ui->labIOPS->setText(QString::number(DataVec[i].currentIOPS,'f',0));
             }
 
 
