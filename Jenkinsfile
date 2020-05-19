@@ -51,7 +51,7 @@ pipeline {
                    sh 'cp ${executable_name} /home/jk/qtprojects/${project}/AppDir/usr/bin/'
                }
                dir ("/home/jk/qtprojects/${project}/appimgstageing") {
-                   sh '/home/jk/stageing/linuxdeployqt-6-x86_64.AppImage /home/jk/qtprojects/${project}/AppDir/usr/share/applications/${desktopfile_name}  -appimage -bundle-non-qt-libs -qmake=$qmakepath  -verbose=2 -updateinformation="zsync|https://appimgupdate.grapho-metronic.com/${appimage_name}-x86_64.AppImage.zsync"'
+                   sh '/home/jk/stageing/linuxdeployqt-6-x86_64.AppImage /home/jk/qtprojects/${project}/AppDir/usr/share/applications/${desktopfile_name}  -appimage -bundle-non-qt-libs -qmake=$qmakepath  -verbose=2 -updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/download/newest/LikeTaskManager-x86_64.AppImage.zsync"'
                }
            }
             
