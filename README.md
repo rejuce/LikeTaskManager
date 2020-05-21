@@ -16,8 +16,8 @@ gives a very comprehensive overview but is hard to look at and kepp and overview
 ## How to Install?  
 
 Just download appimage from release tab, give execute permission and thats it. Should work on all Linux flavours newer than 
-Ubut 16.04. No messing with dpendencies, not install, just run.
-It can always be updated by clicking in the topbar "Update App" pulling the latest version via deltaupdate using appimageupdate from Github.
+Ubut 16.04. No messing with dpendencies, no install, just run.
+It can always be updated by clicking in the topbar "Gereral-> UpdateApp" pulling the latest version via deltaupdate using appimageupdate from Github.
 
 
 ![Alt text](ltm.PNG?raw=true "UI Preview")
