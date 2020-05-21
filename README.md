@@ -26,9 +26,12 @@ All the stats are collected by using sysfs  or Linux Kernel API. None of the sta
 
 
 ## Current state and outlook?  
-Right now the core functionality is there. There are some additonal static information to be grabbed and a bit more polishing to be done. Also dynamically adding and removing disk (for example unplugging USB drive) will be added soon.
+Right now the core functionality is there. 
+There are some additonal static information to be grabbed and a bit more polishing to be done. 
+Also dynamically adding and removing disk (for example unplugging USB drive) will be added soon.
+Support for QHD, 4K Monitors will be added soon
 
-In the future it would be nice to additionally gather GPU stats, which is rather hard as there is no gerneral API and bluetooth stats. Also a listing per process is an option.
+In the future it would be nice to additionally gather GPU stats, which is rather hard as there is no gerneral API, same for bluetooth stats. Also a listing per process is an option.
 
 If other people find it usefull I am also open to feature requests.
 
