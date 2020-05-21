@@ -1,6 +1,6 @@
 ## What is "LikeTaskManager"?
 A Qt based, self-contained (AppImage) process monitor that mimics the feel 
-and functionality of Windows10 Task Managers performance tab under Linux.
+and functionality of Windows10 Task Manager's performance tab under Linux.
 
 ![Alt text](ltm.PNG?raw=true "UI Preview")
 
