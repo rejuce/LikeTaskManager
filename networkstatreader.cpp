@@ -3,6 +3,7 @@
 #include <QTextStream>
 #include <QThread>
 #include <QNetworkInterface>
+#include <QElapsedTimer>
 
 NetworkStatReader::NetworkStatReader(){
 
@@ -27,7 +28,10 @@ NetworkStatReader::NetworkStatReader(){
 
 void NetworkStatReader::measure_main_loop()
 {
+    QElapsedTimer  cycleTimer;
+
     while(!m_quit){
+        cycleTimer.restart();
         static int  slowcounter =0;
 
         {//enterign data race critical section
@@ -69,6 +73,8 @@ void NetworkStatReader::measure_main_loop()
 
         QThread::msleep(100);
         slowcounter++;
+
+
     }
 }
 

@@ -10,6 +10,7 @@
 #include "cpustatreader.h"
 #include <qwt_scale_engine.h>
 #include "ramitemwidget.h"
+#include <QProcess>
 
 
 LTM::LTM(QWidget *parent)
@@ -199,6 +200,55 @@ void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
 
 void LTM::selfUpdate()
 {
-    qDebug() << "self update";
+    ui->stackedWidget->setCurrentIndex(4);
 
+    updateprocess = new QProcess(this);
+
+    //ui->updateText->show();
+
+    qDebug() << "App path : " << qApp->applicationDirPath();
+//QString binDirectory = QFileInfo(qApp->applicationDirPath()).dir().absolutePath();
+
+    if(! QFile(qApp->applicationDirPath()+"/appimageupdatetool-x86_64.AppImage").exists()) ui->updateText->appendPlainText("ERROR: FAILED appimageupdate not packaged");
+   // else if(! QFile("/usr/appimageupdatetool-x86_64.AppImage").exists()) ui->updateText->appendPlainText("ERROR: FAILED appimageupdate tool not isntalled");
+
+    std::cout <<  "$APPIMAGE:" << qgetenv("APPIMAGE").toStdString() << std::endl;
+    updateprocess->setReadChannelMode(QProcess::ProcessChannelMode::MergedChannels);
+    // updateprocess->start("./usr/AppImageUpdate.AppImage");
+    ui->updateText->appendPlainText("starting updater...");
+    qApp->processEvents();
+    updateprocess->start(qApp->applicationDirPath()+"/appimageupdatetool-x86_64.AppImage",QStringList() <<qgetenv("APPIMAGE"));
+    //updateprocess->start("/usr/appimageupdatetool-x86_64.AppImage",QStringList() <<qgetenv("APPIMAGE"));
+    updateprocess->waitForStarted(1000);
+
+    while(updateprocess->state() == QProcess::ProcessState::Running){
+        if( updateprocess->waitForReadyRead(2000)){
+            QString appImageUpdatePath = updateprocess->readAllStandardOutput();
+            appImageUpdatePath.replace("\r","");
+            ui->updateText->appendPlainText(appImageUpdatePath);
+            qApp->processEvents();
+        }
+
+    }
+
+
+    updateprocess->waitForFinished(500);
+    QString appImageUpdatePath = updateprocess->readAllStandardOutput();
+    // QString appImageErr= updateprocess->readAllStandardError();
+    qDebug()<< appImageUpdatePath;// << appImageErr;
+
+   // ui->okButton->show();
+
+
+
+    // while(1)
+    //auto state= updateprocess->state();
+
+
+
+}
+
+void LTM::on_butUpdateOK_clicked()
+{
+    on_listWidget_itemClicked(ui->listWidget->currentItem());
 }

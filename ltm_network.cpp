@@ -124,7 +124,7 @@ void LTM::plot_network_activity()
 
                 ui->labRecKbs->setText(currentRXstr) ;
                 ui->labSendKbs->setText(currentTxstr) ;
-            }
+                }
 
 
             if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {

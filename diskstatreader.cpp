@@ -3,7 +3,7 @@
 #include <mutex>
 #include <QTextStream>
 #include <QThread>
-
+#include <QElapsedTimer>
 
 DiskStatReader::DiskStatReader(QObject *parent) : QObject(parent)
 {
@@ -14,8 +14,11 @@ DiskStatReader::DiskStatReader(QObject *parent) : QObject(parent)
 
 void DiskStatReader::measure_main_loop()
 {
+QElapsedTimer cycleTimer;
 
     while(!m_quit){
+        cycleTimer.restart();
+
         QFile f("/proc/diskstats");
         f.open(QIODevice::ReadOnly | QIODevice::Text);
         if(f.isOpen()){
@@ -44,13 +47,13 @@ void DiskStatReader::measure_main_loop()
 
                     std::lock_guard<std::mutex> lck(m_DataVecMutex);
                     dataptr->currentReadKiBsData.pop_front();
-                    dataptr->currentReadKiBsData.push_back(512*(dataptr->currentStats.secRead-dataptr->previousStats.secRead)/m_intervallMs/1024.0*1000);
+                    dataptr->currentReadKiBsData.push_back(512*(dataptr->currentStats.secRead-dataptr->previousStats.secRead)/m_cycleTimeMs/1024.0*1000);
 
                     dataptr->currentWriteKiBsData.pop_front();
-                    dataptr->currentWriteKiBsData.push_back(512*(dataptr->currentStats.secWrite-dataptr->previousStats.secWrite)/m_intervallMs/1024.0*1000);
+                    dataptr->currentWriteKiBsData.push_back(512*(dataptr->currentStats.secWrite-dataptr->previousStats.secWrite)/m_cycleTimeMs/1024.0*1000);
 
                     dataptr->currentActivityData.pop_front();
-                    dataptr->currentActivityData.push_back(100*(dataptr->currentStats.IOTime-dataptr->previousStats.IOTime)/m_intervallMs);
+                    dataptr->currentActivityData.push_back(100*(dataptr->currentStats.IOTime-dataptr->previousStats.IOTime)/(m_cycleTimeMs)); //corremtopm factpr
 
                     filter_data_deque(dataptr->currentReadKiBsData);
                     filter_data_deque( dataptr->currentWriteKiBsData);
@@ -60,7 +63,7 @@ void DiskStatReader::measure_main_loop()
                     int dReadComplete =  (dataptr->currentStats.readsComplete - dataptr->previousStats.readsComplete);
                     int dWriteComplete =  (dataptr->currentStats.writeComplete - dataptr->previousStats.writeComplete);
 
-                    dataptr->currentIOPS = ((  dReadComplete +dWriteComplete)/m_intervallMs)*1000;
+                    dataptr->currentIOPS = ((  dReadComplete +dWriteComplete)/m_cycleTimeMs)*1000;
 
                     int dReadMerged =  (dataptr->currentStats.readsMerged - dataptr->previousStats.readsMerged);
                     int dWriteMerged =  (dataptr->currentStats.writeMerged - dataptr->previousStats.writeMerged);
@@ -90,6 +93,7 @@ void DiskStatReader::measure_main_loop()
         }
         emit data_ready();
         QThread::msleep(m_intervallMs);
+        m_cycleTimeMs = cycleTimer.elapsed();
     }
 }
 
@@ -124,6 +128,35 @@ void DiskStatReader::update_disk_list()
                     case  0x05 : newDisk.diskType = "Rom"; break;
                     default: newDisk.diskType = "Block Device"; break;
                     }
+                }
+
+                QString vendor;
+                QFile f3(syspath+blkdevice+"/"+"device/vedor");
+                f3.open(QIODevice::ReadOnly | QIODevice::Text);
+                if(f3.isOpen()){
+                    QTextStream in3(&f3);
+                    vendor = in3.readLine();
+                    f3.close();
+                }
+
+                QString model;
+                QFile f4(syspath+blkdevice+"/"+"device/vedor");
+                f4.open(QIODevice::ReadOnly | QIODevice::Text);
+                if(f4.isOpen()){
+                    QTextStream in(&f4);
+                    vendor = in.readLine();
+                    f4.close();
+                }
+
+                newDisk.manufacturer = vendor + " "+ model;
+
+
+
+                QFile f5(syspath+blkdevice+"/"+"size");
+                f5.open(QIODevice::ReadOnly | QIODevice::Text);
+                if(f5.isOpen()){
+                    QTextStream in(&f5);
+                    newDisk.sizeByte = (in.readLine().simplified()).toLongLong()*512; //times linxu blocksize
                 }
 
 

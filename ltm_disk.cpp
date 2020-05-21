@@ -136,12 +136,13 @@ static QString activeStr;
         if(current_disk_index_is_slected(i)){
 
             if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
-
+                ui->labDiskName->setText(DataVec[i].manufacturer);
                 ui->labDiskRead->setText(currentReadStr) ;
                 ui->labDiskWrite->setText(currentWriteStr) ;
                 ui->labActive->setText(activeStr+"%");
                 ui->labRespT->setText(QString::number(DataVec[i].averageRWRespTime,'f',1)+" ms");
                 ui->labIOPS->setText(QString::number(DataVec[i].currentIOPS,'f',0));
+                ui->labDiskCapacity->setText(QString::number(DataVec[i].sizeByte/1024/1024/1024)+" GiB");
             }
 
 

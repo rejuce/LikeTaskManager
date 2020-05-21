@@ -15,6 +15,7 @@
 #include "ramstatreader.h"
 #include "diskstatreader.h"
 #include "diskitemwidget.h"
+#include <QProcess>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LTM; }
@@ -43,6 +44,8 @@ private slots:
     void selfUpdate();
 
     void on_listWidget_itemClicked(QListWidgetItem *item);
+
+    void on_butUpdateOK_clicked();
 
 private:
     Ui::LTM *ui;
@@ -87,7 +90,7 @@ private:
     QVector<double> xAchsisBase600;
 
 
-
+QProcess* updateprocess;
 
 
 
