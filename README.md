@@ -2,7 +2,7 @@
 A Qt based, self-contained (AppImage) process monitor that mimics the feel 
 and functionality of Windows10 Task Manager's performance tab under Linux.
 
-![Alt text](ltm.PNG?raw=true "UI Preview")
+![Alt text](ltm2.PNG?raw=true "UI Preview")
 
 
 ## Why does the Linux world need another performance monitor? 
