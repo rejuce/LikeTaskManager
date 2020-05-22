@@ -22,9 +22,9 @@ void LTM::setup_cpu_plots()
     for(size_t i=0; i<cputCnt+1; i++){//+ for sum of all
          m_curveDataCpuPtrVec.emplace_back(std::make_unique<QwtPlotCurve>());
       //   m_curveFitterPtrVec.emplace_back(std::make_unique<QwtSplineCurveFitter>());
-
     }
-   // ui->plotCpu->setTitle("");
+
+      // ui->plotCpu->setTitle("");
    // ui->plotCpu->setCanvasBackground( Qt::white );
     ui->plotCpu->enableAxis( QwtPlot::yRight,true );
     ui->plotCpu->enableAxis( QwtPlot::yLeft,false );
@@ -65,6 +65,13 @@ m_curveDataCpuPtrVec[0]->setPen(Qt::white, 4);//cpu sum
     ui->plotCpu->replot();
 
 
+   ui->labCPUHeader->setText(m_CPUStatReaderT.model);
+   ui->labCPUPhysCores->setText(m_CPUStatReaderT.CPUCoresPhys);
+    ui->labCPULogCores->setText(m_CPUStatReaderT.CPUCoresLogical);
+    ui->labCPUCache->setText(m_CPUStatReaderT.cacheSize);
+
+
+
 }
 
 
@@ -87,7 +94,14 @@ void LTM::plot_cpu_activity(){
 
             else{
             static int slowCnter = 0;
-            if(slowCnter%5==0)     m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
+            if(slowCnter%5==0){
+                m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
+                if(i==0){
+                ui->labCPULoad->setText(QString::number(*(DataVec[i].currentActivityData.end()-8),'f',2)+"%");
+                ui->labCPUClock->setText(QString::number(*(DataVec[i].currentClockSpeed.end()-8)/1000,'f',2)+" GHz");
+                }
+
+            }
             //auto val = cpuYPlotData[i][cpuYPlotData[i].size()-1];
 
            // m_cpuListWidget.m_clockSpeed->setNum(val);
