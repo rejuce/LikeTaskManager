@@ -9,6 +9,8 @@ DiskItemWidget::DiskItemWidget(const QString type, const QString name, QListWidg
     font.setBold(true);
     m_firstLineTxt->setFont(font);
 
+    set_icon(":/images/hard-disk.png");
+
 }
 
 void DiskItemWidget::update_data(QString read, QString write,  QString active)

@@ -8,6 +8,7 @@ QFont font = m_firstLineTxt->font();
 font.setBold(true);
 m_firstLineTxt->setFont(font);
 
+set_icon(":/images/ethernet.png");
 
 }
 

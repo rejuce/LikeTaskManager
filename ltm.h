@@ -42,6 +42,7 @@ private slots:
     void plot_disk_activity();
 
     void selfUpdate();
+    void printInfo();
 
     void on_listWidget_itemClicked(QListWidgetItem *item);
 

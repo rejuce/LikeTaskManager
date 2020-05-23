@@ -95,7 +95,7 @@ void LTM::plot_cpu_activity(){
             else{
             static int slowCnter = 0;
             if(slowCnter%5==0){
-                m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],4);
+                m_cpuItemWidgetPtr->update_data(DataVec[i].currentActivityData[DataVec[i].currentActivityData.size()-1],*(DataVec[i].currentClockSpeed.end()-8)/1000);
                 if(i==0){
                 ui->labCPULoad->setText(QString::number(*(DataVec[i].currentActivityData.end()-8),'f',2)+"%");
                 ui->labCPUClock->setText(QString::number(*(DataVec[i].currentClockSpeed.end()-8)/1000,'f',2)+" GHz");

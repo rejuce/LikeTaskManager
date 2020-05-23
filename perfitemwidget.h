@@ -21,6 +21,8 @@ public:
     PerfItemWidget(const QString name, PlotType isPlotOn, QListWidget* view, bool isThreeLined);
     PlotType getPlotType(){return m_isPlottedOn;}
 
+    void set_icon(QString path);
+
 protected:
     QLabel* m_firstLineTxt= nullptr;
     QLabel* m_secondLineTxt= nullptr;

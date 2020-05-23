@@ -2,5 +2,8 @@
     <qresource prefix="/images">
         <file>cpu.png</file>
         <file>ram.png</file>
+        <file>hard-disk.png</file>
+        <file>ethernet.png</file>
+        <file>gpu.png</file>
     </qresource>
 </RCC>

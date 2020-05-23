@@ -11,6 +11,7 @@
 #include <qwt_scale_engine.h>
 #include "ramitemwidget.h"
 #include <QProcess>
+#include <QDir>
 
 
 LTM::LTM(QWidget *parent)
@@ -21,6 +22,7 @@ LTM::LTM(QWidget *parent)
     ui->setupUi(this);
 
     connect(ui->actionUpdate,&QAction::triggered,this, &LTM::selfUpdate);
+    connect(ui->actionInfo,&QAction::triggered,this, &LTM::printInfo);
 
    // for(size_t i=0; i<cputCnt+1; i++){
    // m_curveDataCpuPtrVec[i]->setCurveFitter(m_curveFitterPtrVec[i].get());
@@ -200,7 +202,9 @@ void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
 
 void LTM::selfUpdate()
 {
+
     ui->stackedWidget->setCurrentIndex(4);
+
 
     updateprocess = new QProcess(this);
 
@@ -248,7 +252,29 @@ void LTM::selfUpdate()
 
 }
 
+void LTM::printInfo()
+{
+            ui->updateText->clear();
+     ui->stackedWidget->setCurrentIndex(4);
+
+     ui->updateText->appendPlainText("Authored by Juergen Kratochwill 2020");
+     ui->updateText->appendPlainText("Published under GPLv3");
+     ui->updateText->appendPlainText("All Linux and QT related Licesing info can be accesed under: ");
+     QDir license(qApp->applicationDirPath());
+     license.cdUp();
+     license.cd("share");
+     license.cd("doc");
+     ui->updateText->appendPlainText(license.path());
+     ui->updateText->appendPlainText("    ");
+      ui->updateText->appendPlainText("Additonal Attributions:");
+      ui->updateText->appendPlainText("QDarkStyleSheet Project by Colin Duquesnoy: https://github.com/ColinDuquesnoy/QDarkStyleSheet");
+      ui->updateText->appendPlainText("Icons from: https://www.flaticon.com/Freepik");
+
+
+}
+
 void LTM::on_butUpdateOK_clicked()
 {
+
     on_listWidget_itemClicked(ui->listWidget->currentItem());
 }
