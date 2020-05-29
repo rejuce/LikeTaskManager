@@ -11,10 +11,10 @@ PerfItemWidget::PerfItemWidget(const QString name,PlotType isPlotOn, QListWidget
     QGridLayout* layout = new QGridLayout(widget);
 
 
+    QSpacerItem *spacer0 = new QSpacerItem(0, 5, QSizePolicy::Fixed, QSizePolicy::Fixed);
+    layout->addItem(spacer0,0,1);
 
-    auto Label = new QLabel(name,widget);
-    Label->setStyleSheet("background-color: rgba(191, 64, 64, 0); font-weight: bold; font-size: 22px ");
-    layout->addWidget(Label, 1, 1);
+
 
     m_icon = new QLabel("",widget);
     //QPixmap tmp(":/images/cpu.png");
@@ -23,10 +23,13 @@ PerfItemWidget::PerfItemWidget(const QString name,PlotType isPlotOn, QListWidget
     set_icon(":/images/cpu.png");
     //symbol->setScaledContents(true);
    // Label->setStyleSheet("background-color: rgba(191, 64, 64, 0); font-weight: bold; font-size: 22px ");
-
     layout->addWidget(m_icon, 1, 0);
-    QSpacerItem *spacer0 = new QSpacerItem(0, 5, QSizePolicy::Fixed, QSizePolicy::Fixed);
-    layout->addItem(spacer0,0,1);
+
+
+    auto Label = new QLabel(name,widget);
+    Label->setStyleSheet("background-color: rgba(191, 64, 64, 0); font-weight: bold; font-size: 22px ");
+    layout->addWidget(Label, 1, 1);
+
 
 
 
@@ -66,6 +69,6 @@ void PerfItemWidget::set_icon(QString path)
 
     QPixmap tmp(path);
    // m_icon->setScaledContents(true);
-   // m_icon->setMargin(-1);
+    m_icon->setMargin(-1);
     m_icon->setPixmap(tmp.scaled(QSize(21,21), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
