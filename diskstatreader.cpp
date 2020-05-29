@@ -129,6 +129,10 @@ void DiskStatReader::update_disk_list()
                     default: newDisk.diskType = "Block Device"; break;
                     }
                 }
+                else{
+                    //nvme does not have the type file
+                    newDisk.diskType = "NVMe Disk";
+                }
 
                 QString vendor;
                 QFile f3(syspath+blkdevice+"/"+"device/vedor");
