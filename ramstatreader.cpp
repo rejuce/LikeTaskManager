@@ -8,7 +8,7 @@ RamStatReader::RamStatReader(QObject *parent) : QObject(parent)
 {
 
 
-    m_DataVec.resize(1);
+    m_DataVec.append(StatTypes::RamData());
 
     m_DataVec[0].AdapterName = "GenMemory";
 

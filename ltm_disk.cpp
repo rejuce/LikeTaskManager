@@ -211,6 +211,8 @@ static QString activeStr;
     ui->plotDisk->replot();
 }
 
+
+
 //void LTM::update_static_disk_info_from(StatTypes::DiskData& diskData){
 //    // ui->labName =
 

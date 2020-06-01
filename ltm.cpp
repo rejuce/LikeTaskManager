@@ -8,6 +8,7 @@
 #include "cpuitemwidget.h"
 #include <QVector>
 #include "cpustatreader.h"
+#include "processstatreader.h"
 #include <qwt_scale_engine.h>
 #include "ramitemwidget.h"
 #include <QProcess>
@@ -43,30 +44,33 @@ LTM::LTM(QWidget *parent)
 
 
     if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "cpu stat reader stabilsed";
+        qDebug()<< "cpu stat reader started";
 
     m_CPUStatReaderT.start();
 
 
     if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "ram stat reader stabilsed";
+        qDebug()<< "ram stat reader started";
 
     m_RamStatReaderT.start();
 
 
     if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "disk stat reader stabilsed";
+        qDebug()<< "disk stat reader started";
 
     m_DiskStatReaderT.start();
 
 
     if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "network stat reader stabilsed";
+        qDebug()<< "network stat reader started";
 
     m_NetworkStatReaderT.start();
 
 
+    if(connect(&m_ProcessStatReaderT,&ProcessStatReader::data_ready,this,&LTM::handle_process_data ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "network stat reader started";
 
+    m_ProcessStatReaderT.start();
 
 
 //testEntry->set_cpu_clock(20);
@@ -277,4 +281,39 @@ void LTM::on_butUpdateOK_clicked()
 {
 
     on_listWidget_itemClicked(ui->listWidget->currentItem());
+}
+
+
+
+void LTM::handle_process_data()
+{
+    auto& dataVec = m_ProcessStatReaderT.m_DataVec;
+
+    ui->tableWProcess->setRowCount(dataVec.size());
+
+     std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
+    for(int pr=0; pr<dataVec.size();pr++){
+        if(ui->tableWProcess->item(pr,0)==nullptr) {//does not exist yet -> create whole line
+            for(int k=0; k<7; k++){
+                QTableWidgetItem *newItem = new QTableWidgetItem();
+                   ui->tableWProcess->setItem(pr, k, newItem);
+            }
+
+
+        }
+
+
+
+        ui->tableWProcess->item(pr,0)->setData(Qt::DisplayRole,dataVec[pr].pid);
+        ui->tableWProcess->item(pr,1)->setData(Qt::DisplayRole,dataVec[pr].user);
+        ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,QString::number(dataVec[pr].currentCPUPct*100,'f',1) + QString("%"));
+        ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,dataVec[pr].currentMemKiB);
+        ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,dataVec[pr].currentReadKiBsDiskData+dataVec[pr].currentWriteKiBsDiskData);
+        ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,dataVec[pr].currentReadKiBsNetData+dataVec[pr].currentWriteKiBsNetData);
+        ui->tableWProcess->item(pr,6)->setData(Qt::DisplayRole,dataVec[pr].name);
+
+    }
+
+    int hold=0;
+
 }

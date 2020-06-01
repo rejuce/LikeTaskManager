@@ -10,12 +10,14 @@ CPUStatReader::CPUStatReader()  {
     CPUStats::get_cpus_activity();//dummy read to populate
 
     auto currentStat= CPUStats::get_cpus_activity();
-    m_DataVec.resize(currentStat.size());
+
 
     for(size_t i=0; i<currentStat.size(); i++){
-        m_DataVec[i].CPUName = currentStat[i].first;  //intialise names
-        m_DataVec[i].currentActivityData.resize(m_dataPointsPerMinute,0);
-        m_DataVec[i].currentClockSpeed.resize(m_dataPointsPerMinute,0);
+        StatTypes::CPUData record;
+        record.CPUName = currentStat[i].first;  //intialise names
+        record.currentActivityData.resize(m_dataPointsPerMinute,0);
+        record.currentClockSpeed.resize(m_dataPointsPerMinute,0);
+        m_DataVec.append(std::move(record));
     }
 
 

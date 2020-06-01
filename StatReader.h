@@ -57,7 +57,7 @@ protected:
     constexpr static int m_staticDataModulus = 50;
     constexpr static int m_intervallMs =100;
     int m_cycleTimeMs=m_intervallMs;
-    QVector<T> m_DataVec;            //!< one element for each device monitored
+    QList<T> m_DataVec;            //!< one element for each device monitored
     std::mutex m_DataVecMutex;
     bool m_quit=false;                   //!< once true, the measurement loop stops
     std::thread m_measureT;              //!< thread object that executes the measure_main_loop

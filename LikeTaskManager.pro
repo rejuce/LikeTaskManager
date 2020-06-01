@@ -31,6 +31,7 @@ SOURCES += \
 perfitemwidget.cpp \
     main.cpp \
     ltm.cpp \
+    processstatreader.cpp \
     ramitemwidget.cpp \
     ramstatreader.cpp
 
@@ -46,6 +47,7 @@ HEADERS += \
     networkstatreader.h \
 perfitemwidget.h \
     ltm.h \
+    processstatreader.h \
     ramitemwidget.h \
     ramstatreader.h
 

@@ -15,7 +15,9 @@
 #include "ramstatreader.h"
 #include "diskstatreader.h"
 #include "diskitemwidget.h"
+#include "processstatreader.h"
 #include <QProcess>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LTM; }
@@ -40,6 +42,8 @@ private slots:
     void update_static_network_info_from(StatTypes::NetworkData& networkData);
 
     void plot_disk_activity();
+
+    void handle_process_data();
 
     void selfUpdate();
     void printInfo();
@@ -84,6 +88,7 @@ private:
     bool current_network_index_is_slected(int networkindex);  //!> returns true, if networkindex 0...nth Network is selected in the left list WIdget
 
 
+    ProcessStatReader m_ProcessStatReaderT;
 
 
 

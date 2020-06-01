@@ -12,15 +12,14 @@ NetworkStatReader::NetworkStatReader(){
     adapters.removeFirst(); //remove .
     adapters.removeFirst(); //remove ..
 
-
-    m_DataVec.resize(adapters.size());
-
     for(int i=0; i<adapters.size(); i++){
-        m_DataVec[i].AdapterName = adapters[i];  //intialise names
-        m_DataVec[i].currentRxData.resize(m_dataPointsPerMinute,0);
-        m_DataVec[i].currentTxData.resize(m_dataPointsPerMinute,0);
-        m_DataVec[i].previousRxTotalBytes = read_total_rx_bytes(adapters[i]);
-        m_DataVec[i].previousTxTotalBytes = read_total_tx_bytes(adapters[i]);
+        StatTypes::NetworkData record;
+        record.AdapterName = adapters[i];  //intialise names
+        record.currentRxData.resize(m_dataPointsPerMinute,0);
+        record.currentTxData.resize(m_dataPointsPerMinute,0);
+        record.previousRxTotalBytes = read_total_rx_bytes(adapters[i]);
+        record.previousTxTotalBytes = read_total_tx_bytes(adapters[i]);
+        m_DataVec.append(std::move(record));
     }
 
 
