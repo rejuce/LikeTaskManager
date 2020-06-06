@@ -32,7 +32,6 @@ public:
     ~LTM();
 
 private slots:
-    void on_pushButton_clicked();
 
     void plot_cpu_activity();
 

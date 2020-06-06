@@ -13,6 +13,7 @@
 #include "ramitemwidget.h"
 #include <QProcess>
 #include <QDir>
+#include <cmath>
 
 
 LTM::LTM(QWidget *parent)
@@ -132,58 +133,7 @@ void LTM::deselectAllCategories()
 }
 
 
-void LTM::on_pushButton_clicked(){
 
-    auto cpuptr = dynamic_cast<CPUItemWidget*>(ui->listWidget->item(0));
-    cpuptr->update_data(454,2222);
-//    while(1){
-//        qApp->processEvents();
-//        auto currentCPU = CPUStats::get_cpus_activity();
-//        static std::vector<QVector<double>> cpuYPlotData(currentCPU.size(),QVector<double>(xAchsisBase600.size(),0));
-//        for(size_t i=0; i<currentCPU.size(); i++){
-//            cpuYPlotData[i].pop_front();
-//            cpuYPlotData[i].push_back(currentCPU[i].second);
-
-//            //filtering first order
-//            //for(int k = +1; k < cpuYPlotData[i].size()-1; k++)
-//            //int k = cpuYPlotData[i].size()-2;
-//           //     cpuYPlotData[i][k] = (cpuYPlotData[i][k-1]+ cpuYPlotData[i][k] +cpuYPlotData[i][k+1] )/ 3.0;
-
-//            //filtering 2nd order to power n
-//            int k = cpuYPlotData[i].size()-3;
-//            for(int n=8; n>=0; n--){
-//            //for(int k = +2; k < cpuYPlotData[i].size()-2; k++)
-//            cpuYPlotData[i][k] = (cpuYPlotData[i][k-2] + cpuYPlotData[i][k-1] + cpuYPlotData[i][k] +cpuYPlotData[i][k+1] +cpuYPlotData[i][k+2] )/ 5.0;
-//            k--;
-//            }
-
-
-
-
-//            if(i>0){
-
-//                m_curveDataCpuPtrVec[i]->setZ(0);
-//            }
-
-//                else{
-//                static int slowCnter = 0;
-//                if(slowCnter%5==0)     m_cpuItemWidgetPtr->update_data(cpuYPlotData[i][cpuYPlotData[i].size()-1],4);
-//                //auto val = cpuYPlotData[i][cpuYPlotData[i].size()-1];
-
-//               // m_cpuListWidget.m_clockSpeed->setNum(val);
-//                m_curveDataCpuPtrVec[0]->setZ(2);
-//                slowCnter++;
-//            }
-
-//            m_curveDataCpuPtrVec[i]->setSamples(xAchsisBase600,cpuYPlotData[i]);
-
-//        }
-//        QThread::msleep(100);
-//        ui->plotCpu->replot();
-
-//    }
-
-}
 
 
 
@@ -208,6 +158,7 @@ void LTM::selfUpdate()
 {
 
     ui->stackedWidget->setCurrentIndex(4);
+    ui->tabWidget->setCurrentIndex(0);
 
 
     updateprocess = new QProcess(this);
@@ -260,6 +211,7 @@ void LTM::printInfo()
 {
             ui->updateText->clear();
      ui->stackedWidget->setCurrentIndex(4);
+     ui->tabWidget->setCurrentIndex(0);
 
      ui->updateText->appendPlainText("Authored by Juergen Kratochwill 2020");
      ui->updateText->appendPlainText("Published under GPLv3");
@@ -274,11 +226,14 @@ void LTM::printInfo()
       ui->updateText->appendPlainText("QDarkStyleSheet Project by Colin Duquesnoy: https://github.com/ColinDuquesnoy/QDarkStyleSheet");
       ui->updateText->appendPlainText("Icons from: https://www.flaticon.com/Freepik");
 
+       ui->updateText->appendPlainText("Net I/O pre process nethgos/libnethog from https://github.com/raboof/nethogs/ ");
+
 
 }
 
 void LTM::on_butUpdateOK_clicked()
 {
+
 
     on_listWidget_itemClicked(ui->listWidget->currentItem());
 }
@@ -289,30 +244,97 @@ void LTM::handle_process_data()
 {
     auto& dataVec = m_ProcessStatReaderT.m_DataVec;
 
+    QItemSelectionModel *select = ui->tableWProcess->selectionModel();
+    //int curSelectedRow = select->selectedRows().first().row();
+
+    int currentSelectedPID = 0;
+
+    if(select->selectedRows().size()>0){
+        int curSelectedRow= select->selectedRows().first().row();
+        currentSelectedPID = ui->tableWProcess->item(curSelectedRow,0)->data(Qt::DisplayRole).toInt();
+    }
+    else  {
+        currentSelectedPID =-1;
+    }
+
+
+
+
+
+
     ui->tableWProcess->setRowCount(dataVec.size());
 
      std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
-    for(int pr=0; pr<dataVec.size();pr++){
+   ui->tableWProcess->setSortingEnabled(false);
+   //ui->tableWProcess->clear();
+
+     for(int pr=0; pr<dataVec.size();pr++){
         if(ui->tableWProcess->item(pr,0)==nullptr) {//does not exist yet -> create whole line
             for(int k=0; k<7; k++){
                 QTableWidgetItem *newItem = new QTableWidgetItem();
                    ui->tableWProcess->setItem(pr, k, newItem);
+                   ui->tableWProcess->item(pr,k)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
             }
 
 
         }
 
 
-
         ui->tableWProcess->item(pr,0)->setData(Qt::DisplayRole,dataVec[pr].pid);
+         ui->tableWProcess->setColumnWidth(0,60);
+
         ui->tableWProcess->item(pr,1)->setData(Qt::DisplayRole,dataVec[pr].user);
-        ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,QString::number(dataVec[pr].currentCPUPct*100,'f',1) + QString("%"));
-        ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,dataVec[pr].currentMemKiB);
-        ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,dataVec[pr].currentReadKiBsDiskData+dataVec[pr].currentWriteKiBsDiskData);
-        ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,dataVec[pr].currentReadKiBsNetData+dataVec[pr].currentWriteKiBsNetData);
+        ui->tableWProcess->setColumnWidth(1,80);
+
+        ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,dataVec[pr].currentCPUPct );
+      //  ui->tableWProcess->item(pr,2)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
+        ui->tableWProcess->setColumnWidth(2,70);
+
+    //    ui->tableWProcess->item(pr,3)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
+        ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,dataVec[pr].currentMemKiB/1024);
+        ui->tableWProcess->setColumnWidth(3,100);
+
+
+
+        ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,(dataVec[pr].currentReadKiBsDiskData+dataVec[pr].currentWriteKiBsDiskData)/1024);
+        ui->tableWProcess->setColumnWidth(4,100);
+        ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,(dataVec[pr].currentReadKiBsNetData+dataVec[pr].currentWriteKiBsNetData)/1024);
+        ui->tableWProcess->setColumnWidth(5,100);
+
         ui->tableWProcess->item(pr,6)->setData(Qt::DisplayRole,dataVec[pr].name);
+        ui->tableWProcess->setColumnWidth(6,150);
+
+
+
 
     }
+
+
+        ui->tableWProcess->setSortingEnabled(true); //quickly sort it
+
+       ui->tableWProcess->setSortingEnabled(false); //disable sorting again and adjust cell formants
+        ui->tableWProcess->horizontalHeader()->setSortIndicatorShown(true);
+
+
+       for(int pr=0; pr<dataVec.size();pr++){
+           //fix selection
+           if(ui->tableWProcess->item(pr,0)->data(Qt::DisplayRole).toInt()==currentSelectedPID){
+               //select row again
+               ui->tableWProcess->selectRow(pr);
+               //select->row
+           }
+
+           ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,3)->data(Qt::DisplayRole).toFloat(),'f',1) + " MiB");
+           ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,2)->data(Qt::DisplayRole).toFloat()*100,'f',1) + QString("%"));
+           ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,4)->data(Qt::DisplayRole).toFloat(),'f',1) + QString(" MiB/s"));
+
+           if(!m_ProcessStatReaderT.noRootPriv)
+           ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,5)->data(Qt::DisplayRole).toFloat(),'f',1) + QString(" MiB/s"));
+            else ui->tableWProcess->item(pr,5)->setText("need root");
+
+       }
+
+
 
     int hold=0;
 

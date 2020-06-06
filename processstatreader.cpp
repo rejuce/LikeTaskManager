@@ -5,11 +5,47 @@
 #include <QThread>
 #include <QElapsedTimer>
 #include <unistd.h>
+#include <pwd.h>
+#include <thread>
+#include <iostream>
+
+static ProcessStatReader* currentStatReader = nullptr;
+
+void nethogsCallBack(int action, NethogsMonitorRecord const *data){
+
+    auto* entry = currentStatReader->find_pid_in_data(data->pid);
+
+    if(entry!=nullptr){
+        entry->currentReadKiBsNetData = data->recv_kbs;
+        entry->currentWriteKiBsNetData = data->sent_kbs;
+    }
+
+}
+
 
 ProcessStatReader::ProcessStatReader(QObject *parent) : QObject(parent)
 {
+    currentStatReader = this;
+
     update_process_list();
 
+    nethogsT = std::thread([&](){
+           int status = nethogsmonitor_loop(nethogsCallBack,nullptr, 250);
+           switch(status){
+           case NETHOGS_STATUS_OK  : std::cout << "Nethogs Processing Loop OK" << std::endl; break;
+           case NETHOGS_STATUS_FAILURE   : std::cerr << "Nethogs Processing Loop FAILURE" << std::endl;  noRootPriv=true; break;
+           case NETHOGS_STATUS_NO_DEVICE    : std::cerr << "Nethogs Processing Loop NO DEVICE" << std::endl; noEthDeviceErr=true;  break;
+           default : std::cout << "Nethogs Unknown Return Code" << std::endl;
+           }
+    });
+
+
+}
+
+ProcessStatReader::~ProcessStatReader()
+{
+    nethogsmonitor_breakloop();
+    if(nethogsT.joinable()) nethogsT.join();
 }
 
 
@@ -18,7 +54,7 @@ void ProcessStatReader::measure_main_loop()
     QElapsedTimer cycleTimer;
 
     while(!m_quit){
-     m_cycleTimeMs = cycleTimer.elapsed()-(m_widgetDataModulus*m_intervallMs);
+     m_cycleTimeMs = cycleTimer.elapsed();
 
         cycleTimer.restart();
 
@@ -37,7 +73,7 @@ void ProcessStatReader::measure_main_loop()
                     while(!line.isNull()){
 
 
-                        if(line.startsWith("VmSize")){
+                        if(line.startsWith("VmRSS")){
                             auto stringlist = line.split(" ");
                             precord.currentMemKiB = stringlist.at(1).toInt(); //* 9.53674E-7;//9.3132257461548E-7;
                             //auto stringlistBase = model.split(" @ ");
@@ -79,14 +115,14 @@ void ProcessStatReader::measure_main_loop()
 
                         if(line.startsWith("read_bytes")){
                             auto stringlist = line.split(" ");
-                            precord.currentStats.read_bytes = stringlist.at(1).toInt(); //* 9.53674E-7;//9.3132257461548E-7;
+                            precord.currentStats.read_bytes = stringlist.at(1).toLongLong(); //* 9.53674E-7;//9.3132257461548E-7;
                             //auto stringlistBase = model.split(" @ ");
 
                         }
 
                         if(line.startsWith("write_bytes")){
                             auto stringlist = line.split(" ");
-                            precord.currentStats.write_bytes = stringlist.at(1).toInt(); //* 9.53674E-7;//9.3132257461548E-7;
+                            precord.currentStats.write_bytes = stringlist.at(1).toLongLong(); //* 9.53674E-7;//9.3132257461548E-7;
                             //auto stringlistBase = model.split(" @ ");
                             break;
                         }
@@ -101,11 +137,13 @@ void ProcessStatReader::measure_main_loop()
 
                 precord.currentCPUPct =
                         100*(((precord.currentStats.cpuTimeSec-precord.previousStats.cpuTimeSec)/sysconf(_SC_NPROCESSORS_ONLN))
-                             /m_cycleTimeMs);
+                             /(double)m_cycleTimeMs);
 
 
-                precord.currentReadKiBsDiskData = (precord.currentStats.read_bytes-precord.previousStats.read_bytes)/m_cycleTimeMs;
-                precord.currentWriteKiBsDiskData = (precord.currentStats.write_bytes-precord.previousStats.write_bytes)/m_cycleTimeMs;
+
+                precord.currentReadKiBsDiskData = (precord.currentStats.read_bytes-precord.previousStats.read_bytes)/(double)m_cycleTimeMs/1024.0*1000;
+                precord.currentWriteKiBsDiskData = (precord.currentStats.write_bytes-precord.previousStats.write_bytes)/(double)m_cycleTimeMs/1024*1000;
+
 
 
 
@@ -162,14 +200,16 @@ void ProcessStatReader::update_process_list()
                         //auto stringlistBase = model.split(" @ ");
                     }
 
-                    if(line.startsWith("UiD")){
+                    if(line.startsWith("Uid")){
                         auto stringlist = line.split(" ");
-                        record.user = stringlist.at(1); //* 9.53674E-7;//9.3132257461548E-7;
+                        passwd* user =  getpwuid(stringlist.at(1).toInt());
+                        record.user =  QString(user->pw_name);//* 9.53674E-7;//9.3132257461548E-7;
                         //auto stringlistBase = model.split(" @ ");
+                        //delete *user;
                         break;
                     }
 
-                    line = in.readLine();
+                    line = in.readLine().simplified();
                 }
 //only add record if there was enough permission to read it
                 std::lock_guard<std::mutex> lck(m_DataVecMutex);

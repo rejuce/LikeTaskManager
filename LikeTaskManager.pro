@@ -60,6 +60,7 @@ TRANSLATIONS += \
 INCLUDEPATH += /usr/include/qwt
 LIBS += -lqwt-qt5
 
+
 RESOURCES += qdarkstyle/style.qrc
 RESOURCES += images.qrc
 
@@ -68,3 +69,5 @@ RESOURCES += images.qrc
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+unix:!macx: LIBS += -lnethogs

@@ -4,13 +4,14 @@
 #include <QObject>
 #include <QString>
 #include "StatReader.h"
+#include <libnethogs.h>
 
 
 namespace StatTypes{
 
 struct ProcessStat{
-    int read_bytes=0;           //bytes read from the underlyling block layer
-    int write_bytes=0;          //bytes written to the underlying block layer
+    int64_t read_bytes=0;           //bytes read from the underlyling block layer
+    int64_t write_bytes=0;          //bytes written to the underlying block layer
     double cpuTimeSec=0;
 
 };
@@ -46,6 +47,9 @@ public:
 
 
     ProcessStatReader(QObject *parent = nullptr);                               //!< cosntructor, intialises the class, should determine how many disk there are etc...
+    ~ProcessStatReader();
+    bool noEthDeviceErr = false;
+    bool noRootPriv = false;
 
    void measure_main_loop();                       //!< collects data for all disk every 100ms, runs until m_quit ist true
 
@@ -54,8 +58,11 @@ signals:
     void data_ready();
 
 private:
+    friend void nethogsCallBack(int action, NethogsMonitorRecord const *data);
+    std::thread nethogsT;
     void update_process_list();
     StatTypes::ProcessData* find_pid_in_data(int pid);  //!< looks for supplied disk name in data vector, if not foudn return nullptr
+
 
 
 };

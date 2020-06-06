@@ -35,6 +35,7 @@ void LTM::setup_cpu_plots()
     ui->plotCpu->setAxisTitle(QwtPlot::yRight,"Acitivity %");
 
     m_gridCpuPtr->setPen(QColor::fromRgb(0xEF,0xF0,0xF1));
+    m_gridCpuPtr->setYAxis(QwtPlot::yRight);
     m_gridCpuPtr->attach(ui->plotCpu);
 
 
