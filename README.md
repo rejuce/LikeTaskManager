@@ -4,6 +4,10 @@ and functionality of Windows10 Task Manager's performance tab under Linux.
 
 ![Alt text](ltm2.PNG?raw=true "UI Preview")
 
+now in Version 2.0 additionally CPU Load, Memory, Disk I/O and with root permission network I/O per process can be diskplayed
+
+![Alt text](ltm3.PNG?raw=true "UI Process list Preview")
+
 
 ## Why does the Linux world need another performance monitor? 
 
@@ -31,7 +35,7 @@ There are some additonal static information to be grabbed and a bit more polishi
 Also dynamically adding and removing disk (for example unplugging USB drive) will be added soon.
 
 
-In the future it would be nice to additionally gather GPU stats, which is rather hard as there is no gerneral API, same for bluetooth stats. Also a listing per process is an option.
+In the future it would be nice to additionally gather GPU stats, which is rather hard as there is no gerneral API, same for bluetooth stats. 
 
 If other people find it usefull I am also open to feature requests.
 
