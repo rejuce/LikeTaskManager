@@ -26,7 +26,7 @@ It can always be updated by clicking in the topbar "Gereral-> UpdateApp" pulling
 
 
 ## How does it work?
-All the stats are collected by using sysfs  or Linux Kernel API. None of the stats so far are collected by calling third party tools.
+All the stats are collected by using sysfs or Linux Kernel API. For networking stats per process  libnethogs/pcap, the underlying library of the popular tool "nethogs" is used. 
 
 
 ## Current state and outlook?  
