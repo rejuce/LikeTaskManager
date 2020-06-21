@@ -47,31 +47,60 @@ LTM::LTM(QWidget *parent)
     if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
         qDebug()<< "cpu stat reader started";
 
-    m_CPUStatReaderT.start();
+    try {
+        m_CPUStatReaderT.start();
+    } catch (std::exception e) {
+        qDebug() << "execption when initialising CPUreader: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when initialising CPUreader";
+    }
+
 
 
     if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
         qDebug()<< "ram stat reader started";
 
+    try {
     m_RamStatReaderT.start();
+} catch (std::exception e) {
+    qDebug() << "execption when initialising RamStatReader: " << e.what();
+} catch (...){
+    qDebug() << "unknown execption occured when initialising RamStatReader";
+}
 
 
     if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
         qDebug()<< "disk stat reader started";
-
+    try {
     m_DiskStatReaderT.start();
+} catch (std::exception e) {
+    qDebug() << "execption when DiskStatReader: " << e.what();
+} catch (...){
+    qDebug() << "unknown execption occured when initialising DiskStatReader";
+}
 
 
     if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
         qDebug()<< "network stat reader started";
-
+    try {
     m_NetworkStatReaderT.start();
+} catch (std::exception e) {
+    qDebug() << "execption when NetworkStatReader: " << e.what();
+} catch (...){
+    qDebug() << "unknown execption occured when initialising NetworkStatReader";
+}
 
 
     if(connect(&m_ProcessStatReaderT,&ProcessStatReader::data_ready,this,&LTM::handle_process_data ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "network stat reader started";
+        qDebug()<< "process stat reader started";
 
+        try {
     m_ProcessStatReaderT.start();
+    } catch (std::exception e) {
+        qDebug() << "execption when ProcessStatReader: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when initialising ProcessStatReader";
+    }
 
 
 //testEntry->set_cpu_clock(20);

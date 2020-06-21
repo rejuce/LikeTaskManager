@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QElapsedTimer>
 
-DiskStatReader::DiskStatReader(QObject *parent) : QObject(parent)
+DiskStatReader::DiskStatReader(QObject *parent) : QObject(parent), StatReader("DiskStatReader")
 {
     update_disk_list();
 

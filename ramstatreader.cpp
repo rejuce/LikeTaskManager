@@ -4,7 +4,7 @@
 #include <QThread>
 #include <mutex>
 
-RamStatReader::RamStatReader(QObject *parent) : QObject(parent)
+RamStatReader::RamStatReader(QObject *parent) : QObject(parent), StatReader("RamStatReader")
 {
 
 

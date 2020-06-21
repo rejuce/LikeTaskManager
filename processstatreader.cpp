@@ -23,7 +23,7 @@ void nethogsCallBack(int action, NethogsMonitorRecord const *data){
 }
 
 
-ProcessStatReader::ProcessStatReader(QObject *parent) : QObject(parent)
+ProcessStatReader::ProcessStatReader(QObject *parent) : QObject(parent), StatReader("ProcessStatReader")
 {
     currentStatReader = this;
 

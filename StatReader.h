@@ -6,13 +6,14 @@
 #include <vector>
 #include <QVector>
 #include <deque>
+#include <iostream>
 
 template<typename T>
 class StatReader {
 public:
 
 
-    //StatReader(){};                              //!< cosntructor, intialises the class, should determine how many disk there are etc...
+    StatReader(std::string&& name) : m_name(name){}                              //!< cosntructor, intialises the class, should determine how many disk there are etc...
    // virtual ~StatReader(){};
 
 
@@ -24,6 +25,17 @@ public:
     }                                          //!< returns how many disks are monitored
 
     virtual void measure_main_loop()=0;                       //!< collects data for all disk every 100ms, runs until m_quit ist true
+
+    void templateLoop(){
+        try {
+           measure_main_loop();
+        } catch (std::exception e) {
+           std::cerr << "execption caught in measurment_main_loop of " <<m_name << " :" <<  e.what()<< std::endl;
+        } catch (...){
+          std::cerr << "unknown execption occured in measurment_main_loop of "<<m_name << std::endl;
+        }
+    }
+
 
     //default filter algorhytm for all the used data
     void filter_data_deque(std::deque<double>& data){
@@ -42,7 +54,7 @@ public:
         m_quit=false;
         if(!m_measureT.joinable()){
             m_measureT = std::thread([&](){
-            measure_main_loop();
+            templateLoop();
         });
         }
     }                                   //!< starts the measurment thread
@@ -61,6 +73,7 @@ protected:
     std::mutex m_DataVecMutex;
     bool m_quit=false;                   //!< once true, the measurement loop stops
     std::thread m_measureT;              //!< thread object that executes the measure_main_loop
+    const std::string m_name;
 };
 
 #endif // STATREADER_H

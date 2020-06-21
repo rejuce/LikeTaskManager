@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QTextStream>
 
-CPUStatReader::CPUStatReader()  {
+CPUStatReader::CPUStatReader():  StatReader("CPUStatReader")  {
 
     CPUStats::get_cpus_activity();//dummy read to populate
     CPUStats::get_cpus_activity();//dummy read to populate

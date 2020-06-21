@@ -5,7 +5,7 @@
 #include <QNetworkInterface>
 #include <QElapsedTimer>
 
-NetworkStatReader::NetworkStatReader(){
+NetworkStatReader::NetworkStatReader(): StatReader("NetworkReader"){
 
     QDir directory("/sys/class/net/");
     QStringList adapters = directory.entryList();
