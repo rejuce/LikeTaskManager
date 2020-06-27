@@ -254,6 +254,10 @@ void LTM::on_butUpdateOK_clicked()
 
 void LTM::handle_process_data()
 {
+    try{
+
+
+
     auto& dataVec = m_ProcessStatReaderT.m_DataVec;
 
     QItemSelectionModel *select = ui->tableWProcess->selectionModel();
@@ -350,5 +354,12 @@ void LTM::handle_process_data()
 
 
     int hold=0;
+
+
+    } catch (std::exception& e) {
+        qDebug() << "execption when assembling process data: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when assembling process data";
+    }
 
 }
