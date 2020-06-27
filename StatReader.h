@@ -19,7 +19,7 @@ public:
 
     const T& getStatData(int DeviceIndex){
         return m_DataVec.at(DeviceIndex);
-    };                                              //!< gives a reference to the a specified device data entry
+    }                                              //!< gives a reference to the a specified device data entry
     int getDeviceCount(){
         return m_DataVec.size();
     }                                          //!< returns how many disks are monitored
@@ -47,7 +47,7 @@ public:
             k--;
 
         }
-    };
+    }
 
 
     void start(){

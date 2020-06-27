@@ -63,7 +63,7 @@ signals:
 
 private:
     void update_disk_list();
-    StatTypes::DiskData* find_disk_name_in_data(QString name);  //!< looks for supplied disk name in data vector, if not foudn return nullptr
+    StatTypes::DiskData* find_disk_name_in_data(const QString& name);  //!< looks for supplied disk name in data vector, if not foudn return nullptr
 
 
 };

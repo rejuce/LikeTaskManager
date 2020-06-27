@@ -79,12 +79,9 @@ bool LTM::current_network_index_is_slected(int index)
     int currentRow =  ui->listWidget->currentRow();
 
     //only if current selected corresnposds to current data index plot and update register
-    if(currentRow>=startIndexOfEthernetWidgetItems &&
+     return (currentRow>=startIndexOfEthernetWidgetItems &&
             currentRow< startIndexOfEthernetWidgetItems+m_EthItemWidgetPtrVec.size() &&
-            index == currentRow-startIndexOfEthernetWidgetItems){
-        return true;
-    }
-    else return false;
+            index == currentRow-startIndexOfEthernetWidgetItems);
 }
 
 
@@ -94,76 +91,86 @@ bool LTM::current_network_index_is_slected(int index)
 
 void LTM::plot_network_activity()
 {
-    auto& DataVec = m_NetworkStatReaderT.m_DataVec;
 
-    // for(size_t i=0; i<DataVec.size(); i++){
-    static int slowCnter = 0;
-    for(int i=0; i<DataVec.size(); i++){
+    try{
 
-        std::lock_guard<std::mutex> lock(m_NetworkStatReaderT.m_DataVecMutex);
+        auto& DataVec = m_NetworkStatReaderT.m_DataVec;
 
+        // for(size_t i=0; i<DataVec.size(); i++){
+        static int slowCnter = 0;
+        for(int i=0; i<DataVec.size(); i++){
 
-        if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
-            m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
-        }
-
-
-
-
-        //only if current selected corresnposds to current data index plot and update register
-        if(current_network_index_is_slected(i)){
-
-            if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
-                static const QString KBs = " KB/s";
-                static const QString MBs = " MB/s";
-                double currentRx = *(DataVec[i].currentRxData.end()-8);
-                QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
-                double currentTx = -(*(DataVec[i].currentTxData.end()-8));
-                QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
-
-
-                ui->labRecKbs->setText(currentRXstr) ;
-                ui->labSendKbs->setText(currentTxstr) ;
-                }
+            std::lock_guard<std::mutex> lock(m_NetworkStatReaderT.m_DataVecMutex);
 
 
             if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
-                ui->labNetName->setText(DataVec[i].AdapterName);
-                ui->labNetwIp4->setText(DataVec[i].ip4Addresses.join(", "));
-                ui->labNetwIp6->setText(DataVec[i].ip6Addresses.join(", "));
-                ui->labNetwMac->setText(DataVec[i].hwAddress);
-
-                switch(DataVec[i].interfaceType){
-                case QNetworkInterface::InterfaceType::Ethernet : ui->labNetwType->setText("Ethernet"); break;
-                case QNetworkInterface::InterfaceType::Wifi : ui->labNetwType->setText("Wifi");break;
-                case QNetworkInterface::InterfaceType::Virtual : ui->labNetwType->setText("Virtual");break;
-                case QNetworkInterface::InterfaceType::Loopback : ui->labNetwType->setText("Loopback");break;
-                case QNetworkInterface::InterfaceType::CanBus : ui->labNetwType->setText("CAN");break;
-                default : ui->labNetwType->setText("Unknown");break;
-                }
-
-
-                //todo ui->labNetwDNS
-                ui->labNetwSpeed->setText(DataVec[i].speedLinkInfo);
-
+                m_EthItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
             }
 
 
 
-            QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
-            QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
-            m_curveDataNetworkPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
-            m_curveDataNetworkPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+
+            //only if current selected corresnposds to current data index plot and update register
+            if(current_network_index_is_slected(i)){
+
+                if(slowCnter%NetworkStatReader::m_widgetDataModulus==0) {
+                    static const QString KBs = " KB/s";
+                    static const QString MBs = " MB/s";
+                    constexpr int smoothBackMargin = 8;
+                    double currentRx = *(DataVec[i].currentRxData.end()-smoothBackMargin);
+                    QString currentRXstr = (currentRx<2000) ? QString::number(currentRx,'f',1) + KBs : QString::number(currentRx/1000.0,'f',1) + MBs;
+                    double currentTx = -(*(DataVec[i].currentTxData.end()-smoothBackMargin));
+                    QString currentTxstr = (currentTx<2000) ? QString::number(currentTx,'f',1) + KBs : QString::number(currentTx/1000.0,'f',1) + MBs;
+
+
+                    ui->labRecKbs->setText(currentRXstr) ;
+                    ui->labSendKbs->setText(currentTxstr) ;
+                }
+
+
+                if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
+                    ui->labNetName->setText(DataVec[i].AdapterName);
+                    ui->labNetwIp4->setText(DataVec[i].ip4Addresses.join(", "));
+                    ui->labNetwIp6->setText(DataVec[i].ip6Addresses.join(", "));
+                    ui->labNetwMac->setText(DataVec[i].hwAddress);
+
+                    switch(DataVec[i].interfaceType){
+                    case QNetworkInterface::InterfaceType::Ethernet : ui->labNetwType->setText("Ethernet"); break;
+                    case QNetworkInterface::InterfaceType::Wifi : ui->labNetwType->setText("Wifi");break;
+                    case QNetworkInterface::InterfaceType::Virtual : ui->labNetwType->setText("Virtual");break;
+                    case QNetworkInterface::InterfaceType::Loopback : ui->labNetwType->setText("Loopback");break;
+                    case QNetworkInterface::InterfaceType::CanBus : ui->labNetwType->setText("CAN");break;
+                    default : ui->labNetwType->setText("Unknown");break;
+                    }
+
+
+                    //todo ui->labNetwDNS
+                    ui->labNetwSpeed->setText(DataVec[i].speedLinkInfo);
+
+                }
+
+
+
+                QVector<double> tmpRxY(DataVec[i].currentRxData.begin(),DataVec[i].currentRxData.end()-8);
+                QVector<double> tmpTxY(DataVec[i].currentTxData.begin(),DataVec[i].currentTxData.end()-8);
+                m_curveDataNetworkPtrVec[0]->setSamples(xAchsisBase600,tmpRxY);
+                m_curveDataNetworkPtrVec[1]->setSamples(xAchsisBase600,tmpTxY);
+
+            }
 
         }
+        slowCnter++;
 
+
+        // }
+
+        ui->plotNetwork->replot();
+
+    } catch (std::exception& e) {
+        qDebug() << "execption when plotting network acitivity: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when plotting network acitivity";
     }
-    slowCnter++;
-
-
-    // }
-
-    ui->plotNetwork->replot();
 }
 
 void LTM::update_static_network_info_from(StatTypes::NetworkData& networkData){

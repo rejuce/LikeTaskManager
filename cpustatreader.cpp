@@ -12,9 +12,9 @@ CPUStatReader::CPUStatReader():  StatReader("CPUStatReader")  {
     auto currentStat= CPUStats::get_cpus_activity();
 
 
-    for(size_t i=0; i<currentStat.size(); i++){
+    for(auto& cStat : currentStat){
         StatTypes::CPUData record;
-        record.CPUName = currentStat[i].first;  //intialise names
+        record.CPUName = cStat.first;  //intialise names
         record.currentActivityData.resize(m_dataPointsPerMinute,0);
         record.currentClockSpeed.resize(m_dataPointsPerMinute,0);
         m_DataVec.append(std::move(record));
@@ -86,8 +86,9 @@ void CPUStatReader::measure_main_loop()
                 //     cpuYPlotData[i][k] = (cpuYPlotData[i][k-1]+ cpuYPlotData[i][k] +cpuYPlotData[i][k+1] )/ 3.0;
 
                 //filtering 2nd order to power n
+                constexpr int filterIterations = 8;
                 size_t k = m_DataVec[i].currentActivityData.size()-3;
-                for(int n=8; n>=0; n--){
+                for(int n=filterIterations; n>=0; n--){
                     //for(int k = +2; k < cpuYPlotData[i].size()-2; k++)
                     m_DataVec[i].currentActivityData[k] = (m_DataVec[i].currentActivityData[k-2] + m_DataVec[i].currentActivityData[k-1] + m_DataVec[i].currentActivityData[k] +m_DataVec[i].currentActivityData[k+1] +m_DataVec[i].currentActivityData[k+2] )/ 5.0;
                     k--;
@@ -127,7 +128,7 @@ void CPUStatReader::measure_main_loop()
 
         emit data_ready();
 
-        QThread::msleep(100);
+        QThread::msleep(m_cycleTimeMs);
 
 
 

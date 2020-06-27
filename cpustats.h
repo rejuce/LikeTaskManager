@@ -15,7 +15,7 @@ public:
     static std::vector<float> get_cpus_activity_vector();                       ///<jsut returns the activiy wihtout nametags, 0 elemten tis always the whole CPU stat
     static size_t get_cpu_count();
 private:
-    CPUStats();
+    CPUStats() = default;
 static constexpr int NUM_CPU_STATES = 10;
 
 enum CPUStates

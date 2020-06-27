@@ -25,8 +25,8 @@ void LTM::setup_ram_plots()
     ui->plotRam->enableAxis( QwtPlot::yRight,true );
     ui->plotRam->enableAxis( QwtPlot::yLeft,false );
     ui->plotRam->enableAxis( QwtPlot::xBottom,false );
-   // ui->plotRam->setAxisAutoScale ( QwtPlot::yRight, true );
-   // ui->plotRam->axisScaleEngine(QwtPlot::yRight)->setAttribute(QwtScaleEngine::Attribute::Symmetric, false);
+    // ui->plotRam->setAxisAutoScale ( QwtPlot::yRight, true );
+    // ui->plotRam->axisScaleEngine(QwtPlot::yRight)->setAttribute(QwtScaleEngine::Attribute::Symmetric, false);
     //ui->plotRam->axisScaleEngine(QwtPlot::yRight)->setMargins(1,1);
     ui->plotRam->setAxisAutoScale ( QwtPlot::yRight, false );
     ui->plotRam->setAxisScale ( QwtPlot::yRight, 0,100 );
@@ -72,29 +72,31 @@ void LTM::setup_ram_plots()
 
 void LTM::plot_ram_activity()
 {
-static int slowCnter =0;
+    static int slowCnter =0;
 
-    auto& DataVec = m_RamStatReaderT.m_DataVec;
+    try{
 
-    // for(size_t i=0; i<DataVec.size(); i++){
+        auto& DataVec = m_RamStatReaderT.m_DataVec;
 
-    for(int i=0; i<DataVec.length(); i++){
+        // for(size_t i=0; i<DataVec.size(); i++){
 
-        std::lock_guard<std::mutex> lock(m_RamStatReaderT.m_DataVecMutex);
+        for(int i=0; i<DataVec.length(); i++){
+
+            std::lock_guard<std::mutex> lock(m_RamStatReaderT.m_DataVecMutex);
 
 
-        if(slowCnter%m_NetworkStatReaderT.m_widgetDataModulus==0) {
-            double usedGib = DataVec[i].currentUsage.back()*DataVec[i].RamSizeKiB*9.53674e-7/100;
-            double totalGib= DataVec[i].RamSizeKiB*9.53674e-7;
-            m_RamItemWidgetPtr->update_data(usedGib, totalGib);
+            if(slowCnter%NetworkStatReader::m_widgetDataModulus==0) {
+                double usedGib = DataVec[i].currentUsage.back()*DataVec[i].RamSizeKiB*9.53674e-7/100;
+                double totalGib= DataVec[i].RamSizeKiB*9.53674e-7;
+                m_RamItemWidgetPtr->update_data(usedGib, totalGib);
 
-           ui->labMemory->setText(QString::number(usedGib,'f',1) + " GiB (" +  QString::number(usedGib/totalGib*100,'f',1) + "%) of " + QString::number(totalGib,'f',1) + " GiB");
+                ui->labMemory->setText(QString::number(usedGib,'f',1) + " GiB (" +  QString::number(usedGib/totalGib*100,'f',1) + "%) of " + QString::number(totalGib,'f',1) + " GiB");
 
-            double usedSwapGib = DataVec[i].currentSwap.back()*DataVec[i].SwapSizeKiB*9.53674e-7/100;
-            double totalSwapGib= DataVec[i].SwapSizeKiB*9.53674e-7;
-            ui->labSwap->setText(QString::number(usedSwapGib,'f',1) + " GiB (" +  QString::number(usedSwapGib/totalSwapGib*100,'f',1) + "%) of " + QString::number(totalSwapGib,'f',1) + " GiB");
+                double usedSwapGib = DataVec[i].currentSwap.back()*DataVec[i].SwapSizeKiB*9.53674e-7/100.0;
+                double totalSwapGib= DataVec[i].SwapSizeKiB*9.53674e-7;
+                ui->labSwap->setText(QString::number(usedSwapGib,'f',1) + " GiB (" +  QString::number(usedSwapGib/totalSwapGib*100,'f',1) + "%) of " + QString::number(totalSwapGib,'f',1) + " GiB");
 
-        }
+            }
 
 
             QVector<double> tmpRam(DataVec[i].currentUsage.begin(),DataVec[i].currentUsage.end()-8);
@@ -105,11 +107,17 @@ static int slowCnter =0;
         }
 
 
-    slowCnter++;
+        slowCnter++;
 
 
-    // }
+        // }
 
-    ui->plotRam->replot();
+        ui->plotRam->replot();
+
+    } catch (std::exception& e) {
+        qDebug() << "execption when plotting ram acitivity: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when plotting ram acitivity";
+    }
 
 }

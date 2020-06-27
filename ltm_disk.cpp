@@ -101,6 +101,8 @@ bool LTM::current_disk_index_is_slected(int index)
 
 void LTM::plot_disk_activity()
 {
+    try{
+
     auto& DataVec = m_DiskStatReaderT.m_DataVec;
 
     // for(size_t i=0; i<DataVec.size(); i++){
@@ -112,15 +114,16 @@ static QString currentWriteStr;
 static QString currentReadStr;
 static QString activeStr;
 
-        if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
+        if(slowCnter%DiskStatReader::m_widgetDataModulus==0) {
        //     m_DiskItemWidgetPtrVec[i]->update_data(DataVec[i].currentTxData.back(), DataVec[i].currentRxData.back());
             static const QString KBs = " KiB/s";
             static const QString MBs = " MiB/s";
-            double currentWrite = *(DataVec[i].currentWriteKiBsData.end()-8);
+            constexpr int smoothBackMargin = 8;
+            double currentWrite = *(DataVec[i].currentWriteKiBsData.end()-smoothBackMargin);
              currentWriteStr = (currentWrite<1000) ? QString::number(currentWrite,'f',0) + KBs : QString::number(currentWrite/1024.0,'f',0) + MBs;
-            double currentRead = (*(DataVec[i].currentReadKiBsData.end()-8));
+            double currentRead = (*(DataVec[i].currentReadKiBsData.end()-smoothBackMargin));
              currentReadStr = (currentRead<1000) ? QString::number(currentRead,'f',0) + KBs : QString::number(currentRead/1024.0,'f',0) + MBs;
-             double active = *(DataVec[i].currentActivityData.end()-8);
+             double active = *(DataVec[i].currentActivityData.end()-smoothBackMargin);
              activeStr = QString::number(active,'f',0);
 
 
@@ -135,7 +138,7 @@ static QString activeStr;
 //        //only if current selected corresnposds to current data index plot and update register
         if(current_disk_index_is_slected(i)){
 
-            if(slowCnter%m_DiskStatReaderT.m_widgetDataModulus==0) {
+            if(slowCnter%DiskStatReader::m_widgetDataModulus==0) {
                 ui->labDiskName->setText(DataVec[i].manufacturer);
                 ui->labDiskRead->setText(currentReadStr) ;
                 ui->labDiskWrite->setText(currentWriteStr) ;
@@ -209,6 +212,12 @@ static QString activeStr;
     // }
 
     ui->plotDisk->replot();
+
+    } catch (std::exception e) {
+        qDebug() << "execption when plotting disk acitivity: " << e.what();
+    } catch (...){
+        qDebug() << "unknown execption occured when plotting disk acitivity";
+    }
 }
 
 

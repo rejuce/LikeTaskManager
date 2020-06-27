@@ -47,6 +47,7 @@ QElapsedTimer cycleTimer;
 
                     std::lock_guard<std::mutex> lck(m_DataVecMutex);
                     dataptr->currentReadKiBsData.pop_front();
+                    //byte blocksize 512 and unit conversion
                     dataptr->currentReadKiBsData.push_back(512*(dataptr->currentStats.secRead-dataptr->previousStats.secRead)/m_cycleTimeMs/1024.0*1000);
 
                     dataptr->currentWriteKiBsData.pop_front();
@@ -179,7 +180,7 @@ void DiskStatReader::update_disk_list()
 
 }
 
-StatTypes::DiskData *DiskStatReader::find_disk_name_in_data(QString name)
+StatTypes::DiskData *DiskStatReader::find_disk_name_in_data(const QString& name)
 {
     for(auto& diskdata : m_DataVec){
         if(diskdata.diskName == name) return &diskdata;

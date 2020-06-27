@@ -9,7 +9,7 @@ std::vector<std::pair<std::string, float> > CPUStats::get_cpus_activity()
     std::vector<float> current = get_cpus_activity_vector();
 
 
-    if(m_PreviousEntries.size()>0){
+    if(!m_PreviousEntries.empty()){
 
 
 
@@ -44,7 +44,7 @@ std::vector<float> CPUStats::get_cpus_activity_vector()
     ReadStatsCPU(m_CurrentEntries);
 
 
-    if(m_PreviousEntries.size()>0){
+    if(!m_PreviousEntries.empty()){
 
 
 
@@ -56,9 +56,9 @@ std::vector<float> CPUStats::get_cpus_activity_vector()
 
 
 
-            const float ACTIVE_TIME	= static_cast<float>(GetActiveTime(e2) - GetActiveTime(e1));
-            const float IDLE_TIME	= static_cast<float>(GetIdleTime(e2) - GetIdleTime(e1));
-            const float TOTAL_TIME	= ACTIVE_TIME + IDLE_TIME;
+            auto ACTIVE_TIME	= static_cast<float>(GetActiveTime(e2) - GetActiveTime(e1));
+            auto IDLE_TIME	= static_cast<float>(GetIdleTime(e2) - GetIdleTime(e1));
+            auto TOTAL_TIME	= ACTIVE_TIME + IDLE_TIME;
 
             retvec.emplace_back((100.f * ACTIVE_TIME / TOTAL_TIME));
 
@@ -72,13 +72,7 @@ std::vector<float> CPUStats::get_cpus_activity_vector()
 
 }
 
-CPUStats::CPUStats()
-{
 
-
-
-
-}
 void CPUStats::ReadStatsCPU(std::vector<CPUData> & entries)
 {
     entries.clear();

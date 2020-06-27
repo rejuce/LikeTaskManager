@@ -97,7 +97,7 @@ void ProcessStatReader::measure_main_loop()
                             (stringlist.at(13).toInt()
                              +stringlist.at(14).toInt()
                              +stringlist.at(15).toInt()
-                             +stringlist.at(16).toInt())/(double)sysconf(_SC_CLK_TCK);
+                             +stringlist.at(16).toInt())/static_cast<double>(sysconf(_SC_CLK_TCK));
 
                     f.close();
                 }
