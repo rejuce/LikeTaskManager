@@ -8,17 +8,21 @@
 
 int main(int argc, char *argv[])
 {
+      std::cout << "setting auto DPI screen scale factor" << std::endl;
     qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
 
 //    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
+    std::cout << "instantiating QApplication" << std::endl;
     QApplication a(argc, argv);
 
 
    // QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
+    std::cout << "instantiating MainWindow" << std::endl;
     LTM w;
 
+
+     std::cout << "loading qDarkStylesheet..." << std::endl;
     QFile f(":qdarkstyle/style.qss");
     if (!f.exists())
     {
@@ -36,11 +40,34 @@ int main(int argc, char *argv[])
    //                         "QWidget {background-color: #19232D;  border: 0px solid #32414B;  padding: 0px; color: #F0F0F0; selection-background-color: #1464A0;   selection-color: #F0F0F0;  }");
     }
 
-//CPUStats::get_cpus_activity();
-//QThread::msleep(100);
-//auto vec = CPUStats::get_cpus_activity();
+
+    try {
+        std::cout << "showing QMainWindow" << std::endl;
+        w.show();
+
+    } catch (std::exception& e) {
+       std::cerr << "execption caught in main when showing main window: " << e.what()<< std::endl;
+       w.show();
+    } catch (...){
+        std::cerr << "unknown execption in main when showing main window: "<< std::endl;
+        w.show();
+    }
 
 
-    w.show();
-    return a.exec();
+
+    std::cout << "executing QApp eventloop" << std::endl;
+    int exRetVal = 0;
+
+       try {
+   exRetVal = a.exec();
+    } catch (std::exception& e) {
+       std::cerr << "execption caught in main when executing event loop: " << e.what()<< std::endl;
+       exRetVal = a.exec();
+    } catch (...){
+        std::cerr << "unknown execption in main when executing event loop: "<< std::endl;
+        exRetVal = a.exec();
+    }
+
+
+    return exRetVal;
 }

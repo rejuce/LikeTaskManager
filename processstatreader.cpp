@@ -30,13 +30,13 @@ ProcessStatReader::ProcessStatReader(QObject *parent) : QObject(parent), StatRea
     update_process_list();
 
     nethogsT = std::thread([&](){
-           int status = nethogsmonitor_loop(nethogsCallBack,nullptr, 250);
-           switch(status){
-           case NETHOGS_STATUS_OK  : std::cout << "Nethogs Processing Loop OK" << std::endl; break;
-           case NETHOGS_STATUS_FAILURE   : std::cerr << "Nethogs Processing Loop FAILURE" << std::endl;  noRootPriv=true; break;
-           case NETHOGS_STATUS_NO_DEVICE    : std::cerr << "Nethogs Processing Loop NO DEVICE" << std::endl; noEthDeviceErr=true;  break;
-           default : std::cout << "Nethogs Unknown Return Code" << std::endl;
-           }
+        int status = nethogsmonitor_loop(nethogsCallBack,nullptr, 250);
+        switch(status){
+        case NETHOGS_STATUS_OK  : std::cout << "Nethogs Processing Loop OK" << std::endl; break;
+        case NETHOGS_STATUS_FAILURE   : std::cerr << "Nethogs Processing Loop FAILURE" << std::endl;  noRootPriv=true; break;
+        case NETHOGS_STATUS_NO_DEVICE    : std::cerr << "Nethogs Processing Loop NO DEVICE" << std::endl; noEthDeviceErr=true;  break;
+        default : std::cout << "Nethogs Unknown Return Code" << std::endl;
+        }
     });
 
 
@@ -53,15 +53,19 @@ void ProcessStatReader::measure_main_loop()
 {
     QElapsedTimer cycleTimer;
 
+    // throw std::runtime_error("testexception from process stat reader");
+
     while(!m_quit){
-     m_cycleTimeMs = cycleTimer.elapsed();
+        m_cycleTimeMs = cycleTimer.elapsed();
 
         cycleTimer.restart();
-
-        update_process_list();
-
+             update_process_list();
         {
             std::lock_guard<std::mutex> lck(m_DataVecMutex);
+
+
+
+
             for(auto& precord : m_DataVec){
 
                 QFile f("/proc/" + QString::number(precord.pid) +"/status");
@@ -211,7 +215,7 @@ void ProcessStatReader::update_process_list()
 
                     line = in.readLine().simplified();
                 }
-//only add record if there was enough permission to read it
+                //only add record if there was enough permission to read it
                 std::lock_guard<std::mutex> lck(m_DataVecMutex);
                 m_DataVec.push_back(std::move(record));
 

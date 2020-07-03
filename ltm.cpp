@@ -111,6 +111,7 @@ LTM::LTM(QWidget *parent)
 
 
     //assembling the left ItemWidget with currently present devices
+    qDebug()<< "assembling the left ItemWidget with currently present devices";
 try {
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
     m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
@@ -275,12 +276,12 @@ void LTM::handle_process_data()
 
 
 
-
+    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
 
 
     ui->tableWProcess->setRowCount(dataVec.size());
 
-    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
+
     ui->tableWProcess->setSortingEnabled(false);
     //ui->tableWProcess->clear();
 
@@ -351,9 +352,7 @@ void LTM::handle_process_data()
 
     }
 
-
-
-    int hold=0;
+   // throw std::runtime_error("test process aseembling exception");
 
 
     } catch (std::exception& e) {

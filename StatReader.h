@@ -29,7 +29,7 @@ public:
     void templateLoop(){
         try {
            measure_main_loop();
-        } catch (std::exception e) {
+        } catch (std::exception& e) {
            std::cerr << "execption caught in measurment_main_loop of " <<m_name << " :" <<  e.what()<< std::endl;
         } catch (...){
           std::cerr << "unknown execption occured in measurment_main_loop of "<<m_name << std::endl;
