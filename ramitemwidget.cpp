@@ -8,5 +8,7 @@ set_icon(":/images/ram.png");
 
 void RamItemWidget::update_data(double used, double total)
 {
+    if(total>0.0 && m_firstLineTxt!=nullptr){
     m_firstLineTxt->setText(QString::number(used,'f',1) + "/" + QString::number(total,'f',1) + " GiB (" + QString::number(used/total*100,'f',1) + "%)");
+    }
 }

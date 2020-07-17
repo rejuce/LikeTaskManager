@@ -50,8 +50,7 @@ LTM::LTM(QWidget *parent)
 
 
 
-    if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "cpu stat reader started";
+
 
     try {
         m_CPUStatReaderT.start();
@@ -60,11 +59,10 @@ LTM::LTM(QWidget *parent)
     } catch (...){
         qDebug() << "unknown execption occured when initialising CPUreader";
     }
+       qDebug()<< "cpu stat reader started";
 
 
 
-    if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "ram stat reader started";
 
     try {
         m_RamStatReaderT.start();
@@ -73,10 +71,9 @@ LTM::LTM(QWidget *parent)
     } catch (...){
         qDebug() << "unknown execption occured when initialising RamStatReader";
     }
+    qDebug()<< "ram stat reader started";
 
 
-    if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "disk stat reader started";
 
     try {
         m_DiskStatReaderT.start();
@@ -85,10 +82,9 @@ LTM::LTM(QWidget *parent)
     } catch (...){
         qDebug() << "unknown execption occured when initialising DiskStatReader";
     }
+       qDebug()<< "disk stat reader started";
 
 
-    if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "network stat reader started";
     try {
         m_NetworkStatReaderT.start();
     } catch (std::exception& e) {
@@ -96,10 +92,9 @@ LTM::LTM(QWidget *parent)
     } catch (...){
         qDebug() << "unknown execption occured when initialising NetworkStatReader";
     }
+        qDebug()<< "network stat reader started";
 
 
-    if(connect(&m_ProcessStatReaderT,&ProcessStatReader::data_ready,this,&LTM::handle_process_data ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "process stat reader started";
 
     try {
         m_ProcessStatReaderT.start();
@@ -108,16 +103,21 @@ LTM::LTM(QWidget *parent)
     } catch (...){
         qDebug() << "unknown execption occured when initialising ProcessStatReader";
     }
+        qDebug()<< "process stat reader started";
 
 
     //assembling the left ItemWidget with currently present devices
     qDebug()<< "assembling the left ItemWidget with currently present devices";
 try {
+    qDebug()<< "creating CPU entry";
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
+    qDebug()<< "creating RAM entry";
     m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
+    qDebug()<< "creating DISK entries";
     for(int i=0; i<m_DiskStatReaderT.getDeviceCount(); i++){
         m_DiskItemWidgetPtrVec.push_back(new DiskItemWidget(m_DiskStatReaderT.getStatData(i).diskType,m_DiskStatReaderT.getStatData(i).diskName,ui->listWidget));
     }
+    qDebug()<< "creating Network entries";
     for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
         m_EthItemWidgetPtrVec.push_back(new NetworkItemWidget(m_NetworkStatReaderT.getStatData(i).AdapterName,ui->listWidget));
     }
@@ -131,6 +131,22 @@ try {
     }
 
 
+
+
+    if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "cpu stat reader connected";
+
+    if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "ram stat reader connected";
+
+    if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "disk stat reader connected";
+
+    if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "network stat reader connected";
+
+    if(connect(&m_ProcessStatReaderT,&ProcessStatReader::data_ready,this,&LTM::handle_process_data ,Qt::ConnectionType::QueuedConnection))
+        qDebug()<< "process stat reader connected";
 }
 
 LTM::~LTM()
@@ -257,8 +273,6 @@ void LTM::handle_process_data()
 {
     try{
 
-
-
     auto& dataVec = m_ProcessStatReaderT.m_DataVec;
 
     QItemSelectionModel *select = ui->tableWProcess->selectionModel();
@@ -280,7 +294,7 @@ void LTM::handle_process_data()
 
 
     ui->tableWProcess->setRowCount(dataVec.size());
-
+//must be a better way than rewriting the table...
 
     ui->tableWProcess->setSortingEnabled(false);
     //ui->tableWProcess->clear();
@@ -361,4 +375,14 @@ void LTM::handle_process_data()
         qDebug() << "unknown execption occured when assembling process data";
     }
 
+}
+
+
+
+void LTM::on_butKillProcess_clicked()
+{
+    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex); //jsut to be sure not to get current selcted item while table is being rebuilt
+
+     QString terminateID = ui->tableWProcess->selectedItems()[0]->data(Qt::DisplayRole).toString();
+     system((std::string("kill -9 ")+ terminateID.toStdString()).c_str());
 }

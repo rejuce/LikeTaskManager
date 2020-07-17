@@ -23,10 +23,10 @@ struct rawDiskStat{
 };
 
     struct DiskData{
-        QString diskName;                       //!< name of the disk, exmp /dev/sda
-        QString diskType;
-        QString manufacturer;
-        qint64 sizeByte;
+        QString diskName = "";                       //!< name of the disk, exmp /dev/sda
+        QString diskType = "";
+        QString manufacturer = "";
+        qint64 sizeByte = 1;
         std::deque<double> currentActivityData;        //!< vector that always holds one minute of datapoints of disk activity data, constant ammoutn of element
         std::deque<double> currentReadKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element
         std::deque<double> currentWriteKiBsData;    //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of element

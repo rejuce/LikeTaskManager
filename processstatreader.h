@@ -17,16 +17,16 @@ struct ProcessStat{
 };
 
     struct ProcessData{
-        int pid;                       //!< pid of the process
-        QString user;
-        double  currentReadKiBsDiskData;
-        double  currentWriteKiBsDiskData;
-        double  currentReadKiBsNetData;
-        double  currentWriteKiBsNetData;
+        int pid = -1;                       //!< pid of the process
+        QString user = "";
+        double  currentReadKiBsDiskData =0;
+        double  currentWriteKiBsDiskData=0;
+        double  currentReadKiBsNetData=0;
+        double  currentWriteKiBsNetData=0;
 
-        double  currentMemKiB;
-        double  currentCPUPct;
-        QString name;
+        double  currentMemKiB=0;
+        double  currentCPUPct=0;
+        QString name = " ";
 
         ProcessStat previousStats;              //from previous time timepoint
         ProcessStat currentStats;

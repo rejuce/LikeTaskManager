@@ -11,7 +11,7 @@
 namespace StatTypes{
 struct CPUData{
   //  inline CPUData(int dataPointsPerMinute) : currentActivityData(dataPointsPerMinute,0.0),currentClockSpeed(dataPointsPerMinute,0.0){}
-            std::string CPUName;                            //!< name of the CPU, exmp CPUAll, CPU0,..
+            std::string CPUName = "CPU";                            //!< name of the CPU, exmp CPUAll, CPU0,..
             std::deque<double> currentActivityData;        //!< vector that always holds one minute of datapoints of cpu activity data, constant ammoutn of element
             std::deque<double> currentClockSpeed;          //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of elemen
 
@@ -32,10 +32,10 @@ public:
 
 
     friend class LTM;
-    QString CPUCoresPhys;
-    QString CPUCoresLogical;
-    QString cacheSize;
-    QString model;
+    QString CPUCoresPhys = "0";
+    QString CPUCoresLogical = "0";
+    QString cacheSize = "0";
+    QString model = " ";
 
 
 signals:

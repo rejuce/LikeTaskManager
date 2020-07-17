@@ -51,6 +51,10 @@ private slots:
 
     void on_butUpdateOK_clicked();
 
+
+
+    void on_butKillProcess_clicked();
+
 private:
     Ui::LTM *ui;
 
@@ -96,6 +100,7 @@ private:
 
 
 QProcess* updateprocess;
+
 
 
 

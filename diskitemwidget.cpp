@@ -15,7 +15,8 @@ DiskItemWidget::DiskItemWidget(const QString type, const QString name, QListWidg
 
 void DiskItemWidget::update_data(QString& read, QString& write,  QString& active)
 {
- m_secondLineTxt->setText("Rd.: " +read + "     Wd.: " +write + " ("+active +"%)");
+    if(m_secondLineTxt!= nullptr)
+        m_secondLineTxt->setText("Rd.: " +read + "     Wd.: " +write + " ("+active +"%)");
 
 
 }

@@ -22,16 +22,16 @@ struct EthernetLinkStats{
 
 struct NetworkData{
     //  inline CPUData(int dataPointsPerMinute) : currentActivityData(dataPointsPerMinute,0.0),currentClockSpeed(dataPointsPerMinute,0.0){}
-    QString AdapterName;                     //!< name of the CPU, exmp CPUAll, CPU0,..
+    QString AdapterName = " ";                     //!< name of the CPU, exmp CPUAll, CPU0,..
     std::deque<double> currentTxData;        //!< vector that always holds one minute of datapoints of cpu activity data, constant ammoutn of element
     std::deque<double> currentRxData;        //!< vector that always holds one minute of datapoints of transfer statitisc data, constant ammoutn of elemen
     qint64 previousTxTotalBytes=0;              //!<as only the total amoutn of bytes can be read, the rate must be calcualted through the two readouts
     qint64 previousRxTotalBytes=0;              //!<as only the total amoutn of bytes can be read, the rate must be calcualted through the two readouts
-    QNetworkInterface::InterfaceType interfaceType;  //!< describes if can, wifi, ehtnertnet etc
+    QNetworkInterface::InterfaceType interfaceType = QNetworkInterface::InterfaceType::Unknown;  //!< describes if can, wifi, ehtnertnet etc
     QStringList ip4Addresses;
     QStringList ip6Addresses;
-    QString hwAddress;
-    QString speedLinkInfo;
+    QString hwAddress = "N/A";
+    QString speedLinkInfo = "N/A";
 };
 
 }

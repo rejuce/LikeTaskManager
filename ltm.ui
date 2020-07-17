@@ -37,7 +37,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -2031,6 +2031,12 @@
         </property>
         <item>
          <widget class="QTableWidget" name="tableWProcess">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>15</verstretch>
+           </sizepolicy>
+          </property>
           <property name="styleSheet">
            <string notr="true">border-color: rgba(191, 64, 64, 0);</string>
           </property>
@@ -2157,6 +2163,19 @@
             </font>
            </property>
           </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="butKillProcess">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Kill Process (Root Required for non user processes)</string>
+          </property>
          </widget>
         </item>
        </layout>

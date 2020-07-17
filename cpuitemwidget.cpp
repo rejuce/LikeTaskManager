@@ -7,7 +7,8 @@ CPUItemWidget::CPUItemWidget(const QString name, QListWidget* view) : PerfItemWi
 
 void CPUItemWidget::update_data(int pctLoad, double currentGhz)
 {
-    m_firstLineTxt->setText(QString::number(pctLoad) + "%  " + QString::number(currentGhz,'f',2) + " Ghz");
+    if(m_firstLineTxt!=nullptr)
+         m_firstLineTxt->setText(QString::number(pctLoad) + "%  " + QString::number(currentGhz,'f',2) + " Ghz");
 }
 
 
