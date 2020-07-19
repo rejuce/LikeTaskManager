@@ -62,7 +62,11 @@ void RamStatReader::measure_main_loop()
                 if(line.startsWith("SwapFree")){
                     auto stringlist = line.split(" ");
                     m_DataVec[0].currentSwap.pop_front();
+                    if(m_DataVec[0].SwapSizeKiB>0){
                     m_DataVec[0].currentSwap.push_back(100*(m_DataVec[0].SwapSizeKiB-stringlist.at(stringlist.size()-2).toInt())/m_DataVec[0].SwapSizeKiB); //* 9.53674E-7;//9.3132257461548E-7;
+                    }
+                    else m_DataVec[0].currentSwap.push_back(0);
+
                     break;
                 }
 

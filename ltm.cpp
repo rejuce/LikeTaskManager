@@ -14,6 +14,7 @@
 #include <QProcess>
 #include <QDir>
 #include <cmath>
+#include <cstdlib>
 
 
 LTM::LTM(QWidget *parent)
