@@ -9,7 +9,7 @@
 #include <QVector>
 #include "cpustatreader.h"
 #include <qwt_scale_engine.h>
-
+#include <cmath>
 
 
 
