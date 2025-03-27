@@ -22,7 +22,7 @@ gives a very comprehensive overview but is hard to keep a good overview.
 ## How to Install?  
 
 Just download appimage from release tab, give execute permission and thats it. Should work on all Linux flavours equal or newer than 
-Ubut 16.04. No messing with dpendencies, no install, just run.
+Ubut 16.04 (for Qt5 Version) or 20.04 for Qt6. No messing with dpendencies, no install, just run.
 It can always be updated by clicking in the topbar "Gereral-> UpdateApp" pulling the latest version via deltaupdate using appimageupdate from Github.
 
 
