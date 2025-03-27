@@ -26,7 +26,7 @@ pipeline {
                }
 		   
               	 dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
-                  // sh 'make clean -j${core_count}'
+                   sh 'make clean -j${core_count}'
                }
 		   
 
