@@ -204,7 +204,7 @@ void LTM::selfUpdate()
     // else if(! QFile("/usr/appimageupdatetool-x86_64.AppImage").exists()) ui->updateText->appendPlainText("ERROR: FAILED appimageupdate tool not isntalled");
 
     std::cout <<  "$APPIMAGE:" << qgetenv("APPIMAGE").toStdString() << std::endl;
-    updateprocess->setReadChannelMode(QProcess::ProcessChannelMode::MergedChannels);
+    updateprocess->setProcessChannelMode(QProcess::MergedChannels);
     // updateprocess->start("./usr/AppImageUpdate.AppImage");
     ui->updateText->appendPlainText("starting updater...");
     qApp->processEvents();

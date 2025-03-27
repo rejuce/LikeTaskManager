@@ -233,7 +233,7 @@ void ProcessStatReader::update_process_list()
         bool found=false;
         for(int i=0; i<m_DataVec.size(); i++)
             if(m_DataVec[i].pid == pid) found= true;
-        if(!found) m_DataVec.removeAt(i); //entry in adatavec that is not in proc anymore -> remove termindated process
+        if(!found && i<m_DataVec.size()) m_DataVec.removeAt(i); //entry in adatavec that is not in proc anymore -> remove termindated process
 
 
 
