@@ -68,6 +68,7 @@ private:
 
     //RAM Sutff
     RamItemWidget* m_RamItemWidgetPtr;
+    //RamItemWidget* m_SwapItemWidgetPtr;
     RamStatReader m_RamStatReaderT;
     std::unique_ptr<QwtPlotGrid> m_gridRamPtr;
     std::vector<std::unique_ptr<QwtPlotCurve>> m_curveDataRamPtrVec;

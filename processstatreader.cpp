@@ -8,6 +8,7 @@
 #include <pwd.h>
 #include <thread>
 #include <iostream>
+#include <QRegularExpression>
 
 static ProcessStatReader* currentStatReader = nullptr;
 
@@ -96,12 +97,14 @@ void ProcessStatReader::measure_main_loop()
 
                     QString line = in.readLine().simplified();
 
-                    auto stringlist = line.split(" ");
+                    //auto stringlist = line.split(" ");
+                    QStringList stringlist = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
                     precord.currentStats.cpuTimeSec =
-                            (stringlist.at(13).toInt()
-                             +stringlist.at(14).toInt()
-                             +stringlist.at(15).toInt()
-                             +stringlist.at(16).toInt())/static_cast<double>(sysconf(_SC_CLK_TCK));
+                            (stringlist.at(13).toDouble()
+                             +stringlist.at(14).toDouble()
+                           //  +stringlist.at(15).toDouble()
+                            // +stringlist.at(16).toDouble()
+                                                       )/static_cast<double>(sysconf(_SC_CLK_TCK));
 
                     f.close();
                 }
@@ -140,8 +143,9 @@ void ProcessStatReader::measure_main_loop()
                 if(precord.firstIteration) {precord.previousStats = precord.currentStats; precord.firstIteration=false;}
 
                 precord.currentCPUPct =
-                        100*(((precord.currentStats.cpuTimeSec-precord.previousStats.cpuTimeSec)/sysconf(_SC_NPROCESSORS_ONLN))
-                             /(double)m_cycleTimeMs);
+                    20* ((precord.currentStats.cpuTimeSec - precord.previousStats.cpuTimeSec) /
+                                               ((m_cycleTimeMs / 1000.0))) /  (double)sysconf(_SC_NPROCESSORS_CONF);
+
 
 
 
@@ -229,7 +233,7 @@ void ProcessStatReader::update_process_list()
         bool found=false;
         for(int i=0; i<m_DataVec.size(); i++)
             if(m_DataVec[i].pid == pid) found= true;
-        if(!found) m_DataVec.removeAt(i); //entry in adatavec that is not in proc anymore -> remove termindated process
+        if(!found && i<m_DataVec.size()) m_DataVec.removeAt(i); //entry in adatavec that is not in proc anymore -> remove termindated process
 
 
 

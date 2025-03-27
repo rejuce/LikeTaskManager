@@ -5,7 +5,7 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++14
+CONFIG += c++17
 
 
 
@@ -64,8 +64,12 @@ FORMS += \
 TRANSLATIONS += \
     LikeTaskManager_de_AT.ts
 
-INCLUDEPATH += /usr/include/qwt
-LIBS += -lqwt-qt5
+#INCLUDEPATH += /usr/include/qwt
+#LIBS += -lqwt-qt5
+
+INCLUDEPATH += /home/jk/libs/qwt/install-6.3.0/include
+LIBS += -L/home/jk/libs/qwt/install-6.3.0/lib/ -lqwt
+
 
 
 RESOURCES += qdarkstyle/style.qrc
