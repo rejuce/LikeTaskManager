@@ -22,7 +22,7 @@ pipeline {
                    sh 'git fetch origin'  
 	       }
 		dir ("/home/jk/qtprojects/${project}/src") {
-                   sh 'git reset --hard origin qt6'
+                   sh 'git reset --hard origin/qt6'
                }
 		   
               	 dir ("/home/jk/qtprojects/${project}/appimgreleaseci") {
