@@ -114,7 +114,9 @@ try {
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
     qDebug()<< "creating RAM entry";
     m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
+   // m_SwapItemWidgetPtr = new RamItemWidget("SWAP",ui->listWidget);
     qDebug()<< "creating DISK entries";
+
     for(int i=0; i<m_DiskStatReaderT.getDeviceCount(); i++){
         m_DiskItemWidgetPtrVec.push_back(new DiskItemWidget(m_DiskStatReaderT.getStatData(i).diskType,m_DiskStatReaderT.getStatData(i).diskName,ui->listWidget));
     }
