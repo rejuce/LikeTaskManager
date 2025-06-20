@@ -17,6 +17,7 @@
 #include "diskitemwidget.h"
 #include "processstatreader.h"
 #include <QProcess>
+#include <QTimer>
 
 
 QT_BEGIN_NAMESPACE
@@ -51,9 +52,9 @@ private slots:
 
     void on_butUpdateOK_clicked();
 
-
-
     void on_butKillProcess_clicked();
+
+    void load_services();
 
 private:
     Ui::LTM *ui;
@@ -101,6 +102,9 @@ private:
 
 
 QProcess* updateprocess;
+
+//service update
+QTimer serviceUpdater;
 
 
 

@@ -15,6 +15,13 @@
 #include <QDir>
 #include <cmath>
 #include <cstdlib>
+#include <QObject>
+#include <QProcess>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 
 LTM::LTM(QWidget *parent)
@@ -27,6 +34,15 @@ LTM::LTM(QWidget *parent)
 
     connect(ui->actionUpdate,&QAction::triggered,this, &LTM::selfUpdate);
     connect(ui->actionInfo,&QAction::triggered,this, &LTM::printInfo);
+
+
+    // Setup headers once
+    ui->systemdTable->setColumnCount(5);
+    ui->systemdTable->setHorizontalHeaderLabels({"UNIT", "LOAD", "ACTIVE", "SUB", "DESCRIPTION"});
+    ui->systemdTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    connect(&serviceUpdater, &QTimer::timeout, this, &LTM::load_services);
+    serviceUpdater.setInterval(1000);
+    serviceUpdater.start();
 
 
 
@@ -246,7 +262,8 @@ void LTM::printInfo()
     ui->tabWidget->setCurrentIndex(0);
 
     ui->updateText->appendPlainText("Authored by Juergen Kratochwill 2020");
-    ui->updateText->appendPlainText("Published under GPLv3");
+    ui->updateText->appendPlainText("Version 3.1.0");
+    ui->updateText->appendPlainText("Published under GPLv3, no liabilites or whatsover are taken");
     ui->updateText->appendPlainText("All Linux and QT related Licesing info can be accesed under: ");
     QDir license(qApp->applicationDirPath());
     license.cdUp();
@@ -388,4 +405,43 @@ void LTM::on_butKillProcess_clicked()
 
      QString terminateID = ui->tableWProcess->selectedItems()[0]->data(Qt::DisplayRole).toString();
      system((std::string("kill -9 ")+ terminateID.toStdString()).c_str());
+}
+
+void LTM::load_services() {
+    QProcess process;
+    process.start("systemctl", {"list-units", "--type=service", "--all", "--no-pager", "--output=json"});
+    if (!process.waitForFinished(5000)) {
+        // handle error
+        return;
+    }
+
+    QByteArray jsonOutput = process.readAllStandardOutput();
+    QJsonDocument doc = QJsonDocument::fromJson(jsonOutput);
+
+    if (!doc.isArray()) return;
+
+    QJsonArray array = doc.array();
+    ui->systemdTable->clearContents();
+    ui->systemdTable->setRowCount(array.size());
+
+    int row = 0;
+    for (const QJsonValue& val : array) {
+        if (!val.isObject()) continue;
+        QJsonObject obj = val.toObject();
+
+        QString unit = obj["unit"].toString();
+        QString load = obj["load"].toString();
+        QString active = obj["active"].toString();
+        QString sub = obj["sub"].toString();
+        QString description = obj["description"].toString();
+
+        ui->systemdTable->setItem(row, 0, new QTableWidgetItem(unit));
+        ui->systemdTable->setItem(row, 1, new QTableWidgetItem(load));
+        ui->systemdTable->setItem(row, 2, new QTableWidgetItem(active));
+        ui->systemdTable->setItem(row, 3, new QTableWidgetItem(sub));
+        ui->systemdTable->setItem(row, 4, new QTableWidgetItem(description));
+        row++;
+    }
+
+    ui->systemdTable->setRowCount(row); // In case some rows were skipped
 }

@@ -79,7 +79,6 @@
                 <property name="font">
                  <font>
                   <pointsize>26</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -93,7 +92,6 @@
                 <property name="font">
                  <font>
                   <pointsize>18</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -192,7 +190,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -247,7 +244,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -341,7 +337,6 @@
                   <widget class="QLabel" name="labCPUBaseClk">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -360,7 +355,6 @@
                   <widget class="QLabel" name="labCPUPhysCores">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -379,7 +373,6 @@
                   <widget class="QLabel" name="labCPUCache">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -434,7 +427,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -509,7 +501,6 @@
                 <property name="font">
                  <font>
                   <pointsize>26</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -526,7 +517,6 @@
                 <property name="font">
                  <font>
                   <pointsize>18</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -641,7 +631,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -696,7 +685,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -774,7 +762,6 @@
                   <widget class="QLabel" name="labNetwIp4_2">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -822,7 +809,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -841,7 +827,6 @@
                   <widget class="QLabel" name="labNetwType_2">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -886,7 +871,6 @@
                   <widget class="QLabel" name="labNetwSpeed_2">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -952,7 +936,6 @@
                 <property name="font">
                  <font>
                   <pointsize>26</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -969,7 +952,6 @@
                 <property name="font">
                  <font>
                   <pointsize>18</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -1093,7 +1075,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1148,7 +1129,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1258,7 +1238,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1319,7 +1298,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1426,7 +1404,6 @@
                   <widget class="QLabel" name="labIOPS">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1455,7 +1432,6 @@
                   <widget class="QLabel" name="labDiskCapacity">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1474,7 +1450,6 @@
                   <widget class="QLabel" name="labNetwMac_3">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1530,7 +1505,6 @@
                 <property name="font">
                  <font>
                   <pointsize>26</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -1547,7 +1521,6 @@
                 <property name="font">
                  <font>
                   <pointsize>18</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -1665,7 +1638,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1720,7 +1692,6 @@
                    <property name="font">
                     <font>
                      <pointsize>22</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1807,7 +1778,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1836,7 +1806,6 @@
                   <widget class="QLabel" name="labNetwMac">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1852,7 +1821,6 @@
                   <widget class="QLabel" name="labNetwIp4">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1871,7 +1839,6 @@
                   <widget class="QLabel" name="labNetwType">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1910,7 +1877,6 @@
                   <widget class="QLabel" name="labNetwSpeed">
                    <property name="font">
                     <font>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2083,12 +2049,8 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
-           </property>
-           <property name="textAlignment">
-            <set>AlignCenter</set>
            </property>
           </column>
           <column>
@@ -2098,7 +2060,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2110,7 +2071,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2122,7 +2082,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2134,7 +2093,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2146,7 +2104,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2158,7 +2115,6 @@
            <property name="font">
             <font>
              <pointsize>13</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -2180,6 +2136,16 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>systemDServices</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="QTableWidget" name="systemdTable"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -2190,7 +2156,7 @@
      <x>0</x>
      <y>0</y>
      <width>1111</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuGeneral">
