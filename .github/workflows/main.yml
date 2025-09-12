@@ -70,15 +70,14 @@ jobs:
         run: |
           mkdir -p "${{ env.APPDIR }}/usr/share/applications"
           mkdir -p "${{ env.APPDIR }}/usr/share/icons/hicolor/256x256/apps"
-          cat > "${{ env.APPDIR }}/usr/share/applications/${{ env.APP_NAME }}.desktop" <<'DESK'
-[Desktop Entry]
-Type=Application
-Name=LikeTaskManager
-Exec=LikeTaskManager
-Icon=LikeTaskManager
-Categories=Utility;
-Terminal=false
-DESK
+          cat > "${{ env.APPDIR }}/usr/share/applications/${{ env.APP_NAME }}.desktop" <<'DESK'[Desktop Entry] 
+          Type=Application
+          Name=LikeTaskManager
+          Exec=LikeTaskManager
+          Icon=LikeTaskManager
+          Categories=Utility;
+          Terminal=false
+          DESK
           if [ -f "$GITHUB_WORKSPACE/icons/myapp-256.png" ]; then
             cp "$GITHUB_WORKSPACE/icons/myapp-256.png" \
                "${{ env.APPDIR }}/usr/share/icons/hicolor/256x256/apps/myapp.png"
