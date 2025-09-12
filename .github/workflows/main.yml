@@ -1,0 +1,122 @@
+name: Build AppImage
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04   # 👈 Run everything inside Ubuntu 20.04
+    env:
+      APP_NAME: LikeTaskManager                 # <- change
+      PROJ_FILE: LikeTaskManager.pro            # <- path to your .pro (relative to repo root)
+      BUILD_DIR: ${{ github.workspace }}/build
+      APPDIR: ${{ github.workspace }}/AppDir
+      QT_VERSION: "6.5.3"             # Qt6 LTS version that still has Ubuntu 20.04 binaries
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            libgl1-mesa-dev \
+            libx11-xcb-dev \
+            libxcb1 \
+            libxcb-xinerama0 \
+            libxkbcommon-x11-0 \
+            libfontconfig1-dev \
+            libfuse2 \
+            wget \
+            curl \
+            ca-certificates \
+            git
+
+      - name: Install Qt (qmake + tools)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          install-deps: 'true'
+          cache: 'true'
+
+      - name: Show which qmake we have
+        run: |
+          which qmake || true
+          qmake -v || true
+
+      - name: Build (qmake)
+        run: |
+          set -e
+          mkdir -p "${{ env.BUILD_DIR }}"
+          cd "${{ env.BUILD_DIR }}"
+          qmake "$GITHUB_WORKSPACE/${{ env.PROJ_FILE }}"
+          make -j$(nproc)
+
+      - name: Install into AppDir
+        run: |
+          set -e
+          mkdir -p "${{ env.APPDIR }}"
+          cd "${{ env.BUILD_DIR }}"
+          make INSTALL_ROOT="${{ env.APPDIR }}" install
+          find "${{ env.APPDIR }}" -maxdepth 3 -print
+
+      - name: Add .desktop and icon
+        run: |
+          mkdir -p "${{ env.APPDIR }}/usr/share/applications"
+          mkdir -p "${{ env.APPDIR }}/usr/share/icons/hicolor/256x256/apps"
+          cat > "${{ env.APPDIR }}/usr/share/applications/${{ env.APP_NAME }}.desktop" <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=LikeTaskManager
+Exec=LikeTaskManager
+Icon=LikeTaskManager
+Categories=Utility;
+Terminal=false
+DESK
+          if [ -f "$GITHUB_WORKSPACE/icons/myapp-256.png" ]; then
+            cp "$GITHUB_WORKSPACE/icons/myapp-256.png" \
+               "${{ env.APPDIR }}/usr/share/icons/hicolor/256x256/apps/myapp.png"
+          fi
+
+      - name: Download linuxdeploy and plugin
+        run: |
+          set -e
+          LDVER=1-alpha-20250213-2
+          PLUGINQTVER=1-alpha-20250213-1
+          curl -L -o linuxdeploy-x86_64.AppImage \
+            "https://github.com/linuxdeploy/linuxdeploy/releases/download/${LDVER}/linuxdeploy-x86_64.AppImage"
+          chmod +x linuxdeploy-x86_64.AppImage
+          curl -L -o linuxdeploy-plugin-qt-x86_64.AppImage \
+            "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/${PLUGINQTVER}/linuxdeploy-plugin-qt-x86_64.AppImage"
+          chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
+
+      - name: Bundle into AppImage
+        env:
+          QMAKE: ${{ env.QT_ROOT_DIR }}/bin/qmake
+        run: |
+          set -e
+          PROG="${{ env.APP_NAME }}"
+          EXE_PATH="${{ env.APPDIR }}/usr/bin/${PROG}"
+
+          ./linuxdeploy-x86_64.AppImage --appdir "${{ env.APPDIR }}" \
+            --executable "$EXE_PATH" \
+            --desktop-file "${{ env.APPDIR }}/usr/share/applications/${{ env.APP_NAME }}.desktop" \
+            --icon-file "${{ env.APPDIR }}/usr/share/icons/hicolor/256x256/apps/myapp.png" \
+            --plugin qt \
+            --output appimage
+
+          mkdir -p dist
+          mv ./*.AppImage dist/ || true
+          ls -l dist || true
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-appimage
+          path: dist/*.AppImage
