@@ -68,13 +68,17 @@ jobs:
           meson setup build -Ddisable-wifi=true -Ddisable-nvidia=true
           meson compile -C build
           sudo meson install -C build
-          cd /usr/local/lib/x86_64-linux-gnu
+          # find where meson put the .so (varies by distro: /usr/local/lib or /usr/local/lib/<multiarch>)
+          LIBDIR=$(dirname $(find /usr/local/lib -name 'liblibnethogs.so*' -not -name '*.so.*' | head -1))
+          echo "libnethogs installed to: $LIBDIR"
           # fix broken SONAME baked in by the meson build
-          sudo patchelf --set-soname liblibnethogs.so liblibnethogs.so
+          sudo patchelf --set-soname liblibnethogs.so "$LIBDIR/liblibnethogs.so"
           # compatibility symlink: project links against -lnethogs
-          sudo ln -sf liblibnethogs.so libnethogs.so
+          sudo ln -sf liblibnethogs.so "$LIBDIR/libnethogs.so"
           # flat header expected by CMakeLists: libnethogs.h
           sudo ln -sf /usr/local/include/libnethogs/libnethogs.h /usr/local/include/libnethogs.h
+          # make discoverable by CMake find_library
+          echo "$LIBDIR" | sudo tee /etc/ld.so.conf.d/libnethogs.conf
           sudo ldconfig
 
       - name: Build LikeTaskManager
