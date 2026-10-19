@@ -2,7 +2,19 @@
 
 ## Current Focus: Debugging Segfault on Lubuntu 24.04 (headless/VNC)
 
-### Status: Debug instrumentation added, ready to build & test
+### Status: Build fixed, debug instrumentation ready to test on target
+
+### Build Fix (2025-06-15)
+- **Root cause:** `qdarkstyle/QDarkStyle.h` and `QDarkStyle.cpp` were never committed to git.
+  The `qdarkstyle/` dir only had `rc/` images, `style.qrc`, and `style.qss`.
+  CI failed with `QDarkStyle.h: No such file or directory`.
+- **Fix:** Inlined `loadQDarkStyleSheet()` helper in `main.cpp` that reads
+  `qrc:/qdarkstyle/style.qss` via `QFile`. No separate class files needed.
+- **Also fixed in main.cpp:**
+  - `backtrace_symbols_fd(frames, n, stderr)` → `fileno(stderr)` (needs `int fd`, not `FILE*`)
+  - Added `#include <QScreen>` (was only forward-declared via `QApplication`)
+- **Removed:** `qdarkstyle/QDarkStyle.h`, `qdarkstyle/QDarkStyle.cpp` (unnecessary)
+- **Verification:** Full local build passes, all 7 unit tests pass.
 
 ### Problem
 AppImage segfaults on Lubuntu 24.04 headless server (xserver dummy screen, VNC only).

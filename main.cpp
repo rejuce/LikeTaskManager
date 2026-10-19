@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QScreen>
+#include <QFile>
+#include <QTextStream>
 #include "ltm.h"
 #include <iostream>
 #include <csignal>
@@ -10,10 +12,14 @@
 // https://www.particlephysics.sussex.ac.uk/
 // https://www.particlephysics.sussex.ac.uk/~peterg/2015-10-07/
 
-//https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/src/QDarkStyleSheet.cpp
-//https://github.com/ColinDuquesnoy/QDarkStyleSheet
-
-#include <QDarkStyle.h>
+// https://github.com/ColinDuquesnoy/QDarkStyleSheet
+static QString loadQDarkStyleSheet()
+{
+    QFile f(QStringLiteral(":/qdarkstyle/style.qss"));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return QString();
+    return QString::fromUtf8(f.readAll());
+}
 
 // ---- SIGSEGV / SIGABRT backtrace handler ----
 static void crash_handler(int sig)
@@ -53,7 +59,7 @@ int main(int argc, char *argv[])
     std::cout << "[main] LTM constructor returned" << std::endl;
 
     std::cout << "[main] loading qDarkStylesheet..." << std::endl;
-    a.setStyleSheet(QDarkStyleSheet::generateQDarkStyleSheet());
+    a.setStyleSheet(loadQDarkStyleSheet());
     std::cout << "[main] qDarkStylesheet loaded" << std::endl;
 
 
