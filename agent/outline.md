@@ -130,6 +130,15 @@ ItemWidgets (QwtPlot curves) + static labels
 - `Makefile`
 - `.qmake.stash`
 
+### Build Environment (OpenTerminal container, Debian 13)
+- **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)
+- **Qwt 6.3.0** built from SourceForge tarball → installed at `/usr/local/qwt-6.3.0/`; symlink `/home/jk/libs/qwt/install-6.3.0` → it (matches hardcoded path in `.pro`)
+- **libnethogs 0.8.8** built from source (meson) → `/usr/local`; real lib is `liblibnethogs.so`, with compat symlinks `libnethogs.so` and `/usr/local/include/libnethogs.h`
+- Toolchain: g++ 14.2, cmake, ninja, meson, make
+- Build: `qmake6 LikeTaskManager.pro -spec linux-g++ CONFIG+=release && make -j` (out-of-tree in `/tmp/ltm-build`)
+- Run headless: `QT_QPA_PLATFORM=offscreen ./LikeTaskManager` (nethogs loop needs CAP_NET_ADMIN/root — degrades gracefully without it)
+- Dependency sources kept at `deps-src/` (untracked)
+
 ## Git Info
 - **Remote:** `origin` → `github.com:rejuce/LikeTaskManager.git`
 - **Branches:** `master` (Qt5 legacy), `Qt5-final`, `qt6` (base), `Qt6Cmake` (working)

@@ -1,0 +1,3 @@
+# local dependency builds (built from tarballs, see agent/progress.md)
+deps-src/
+deps-install/
