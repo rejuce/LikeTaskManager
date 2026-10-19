@@ -74,6 +74,7 @@ void LTM::setup_network_plots(){
 
 bool LTM::current_network_index_is_slected(int index)
 {
+    if(m_EthItemWidgetPtrVec.empty()) return false;
 
     int startIndexOfEthernetWidgetItems = ui->listWidget->row(dynamic_cast<QListWidgetItem*>(m_EthItemWidgetPtrVec[0]));
     int currentRow =  ui->listWidget->currentRow();

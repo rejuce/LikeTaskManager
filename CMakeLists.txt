@@ -111,6 +111,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${NETHOGS_LIBRARY}
 )
 
+# Keep symbols visible so backtrace_symbols() in the crash handler works
+target_link_options(${PROJECT_NAME} PRIVATE -rdynamic)
+
 # --------------------------------------------------------------------------
 # Translations
 # --------------------------------------------------------------------------

@@ -81,6 +81,7 @@ void LTM::setup_disk_plots(){
 
 bool LTM::current_disk_index_is_slected(int index)
 {
+    if(m_DiskItemWidgetPtrVec.empty()) return false;
 
     int startIndexOfDiskWidgetItems = ui->listWidget->row(dynamic_cast<QListWidgetItem*>(m_DiskItemWidgetPtrVec[0]));
     int currentRow =  ui->listWidget->currentRow();
