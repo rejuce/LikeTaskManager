@@ -196,6 +196,7 @@ Iterative fixes pushed to `Qt6Cmake` to get the CI workflow green. Each push tri
 | `ec769dd` | Removed `-Ddisable-wifi -Ddisable-nvidia` from `meson setup` | nethogs v0.8.8 meson.build has no such options. Only deps: `threads` + `libpcap`. Plain `meson setup build` works. |
 | `dc606c5` | Symlink `qmake6` → `qmake` in `/usr/local/bin` before linuxdeployqt | ubuntu-22.04 ships both Qt5+Qt6; default `qmake` is Qt5. linuxdeployqt uses `qmake` from PATH to detect Qt version. |
 | `25e1878` | `chmod +x LikeTaskManager-*.AppImage` after bundling | linuxdeployqt creates AppImage without execute bit → `timeout` can't run it. |
+| `88afb77` | Smoke test: `--appimage-extract` + run `squashfs-root/AppRun` | GH runners lack FUSE → AppImage can't self-extract. Extract manually, run AppRun under xvfb. |
 
 ### Key CI Knowledge
 - **Qwt 6.x:** No CMake support in any version (6.3.0, 6.4.0). Must build with `qmake6`. OpenGL must be disabled by sed-patching `qwtconfig.pri` (command-line qmake vars are set before `.pri` parsing, so `QWT_CONFIG-=QwtOpenGL` doesn't work).
