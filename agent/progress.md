@@ -193,6 +193,7 @@ Iterative fixes pushed to `Qt6Cmake` to get the CI workflow green. Each push tri
 | `72ae939` | libnethogs: replaced hard-coded `cd /usr/local/lib/x86_64-linux-gnu` with `find`-based lookup | meson install path varies by distro |
 | `0f83bbc` | libnethogs: added explicit `.so` search with diagnostic output, fallback to build tree | `find` could return empty → silent failure under `bash -e` |
 | `696b2aa` | **Root cause fix for libnethogs:** wrong repo (`ntop`→`raboof`), missing `v` prefix on tag (`0.8.8`→`v0.8.8`), header path fixed (`src/libnethogs.h`), skip `meson install` and copy `.so` from build tree directly | `ntop/nethogs` is 404. Correct repo is `raboof/nethogs`. Tags use `v` prefix. `wget` was silently failing → empty file → `tar` fails → exit 8 |
+| `ec769dd` | Removed `-Ddisable-wifi -Ddisable-nvidia` from `meson setup` | nethogs v0.8.8 meson.build has no such options. Only deps: `threads` + `libpcap`. Plain `meson setup build` works. |
 
 ### Key CI Knowledge
 - **Qwt 6.x:** No CMake support in any version (6.3.0, 6.4.0). Must build with `qmake6`. OpenGL must be disabled by sed-patching `qwtconfig.pri` (command-line qmake vars are set before `.pri` parsing, so `QWT_CONFIG-=QwtOpenGL` doesn't work).
