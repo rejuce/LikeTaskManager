@@ -92,6 +92,8 @@ add_executable(${PROJECT_NAME}
     StatReader.h
     images.qrc
     qdarkstyle/style.qrc
+    qdarkstyle/QDarkStyle.h
+    qdarkstyle/QDarkStyle.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DEPRECATED_WARNINGS)
@@ -100,6 +102,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QWT_INCLUDE_DIR}
     ${NETHOGS_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/qdarkstyle
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

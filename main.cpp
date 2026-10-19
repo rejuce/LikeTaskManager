@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QScreen>
 #include "ltm.h"
 #include <iostream>
 #include <csignal>
@@ -20,7 +21,7 @@ static void crash_handler(int sig)
     void* frames[64];
     int n = backtrace(frames, 64);
     fprintf(stderr, "\n=== CRASH: signal %d ===\n", sig);
-    backtrace_symbols_fd(frames, n, stderr);
+    backtrace_symbols_fd(frames, n, fileno(stderr));
     fprintf(stderr, "=== END BACKTRACE ===\n");
     // Re-raise with default handler so the core dump still happens
     signal(sig, SIG_DFL);
