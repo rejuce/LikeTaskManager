@@ -64,7 +64,7 @@ jobs:
           wget -q "https://github.com/raboof/nethogs/archive/refs/tags/${NETHOGS_VERSION}.tar.gz" -O nethogs.tar.gz
           tar xzf nethogs.tar.gz
           cd nethogs-${NETHOGS_VERSION#v}
-          meson setup build -Ddisable-wifi=true -Ddisable-nvidia=true
+          meson setup build
           meson compile -C build
           # find the built .so in the build tree
           SOFILE=$(find build -name 'liblibnethogs.so*' -type f | head -1)
