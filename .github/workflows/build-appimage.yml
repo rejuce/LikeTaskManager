@@ -36,13 +36,14 @@ jobs:
       # ------------------------------------------------------------------
       - name: Build Qwt
         run: |
-          # Qwt 6.3.0 ships no CMakeLists.txt (CMake support added in 6.4.0),
-          # so build with qmake which is available on ubuntu-22.04
+          # Qwt 6.x ships no CMakeLists.txt (qmake-only),
+          # so build with qmake6 which is available on ubuntu-22.04
           wget -q "https://downloads.sourceforge.net/project/qwt/qwt/${QWT_VERSION}/qwt-${QWT_VERSION}.tar.bz2" -O qwt.tar.bz2
           tar xf qwt.tar.bz2
           cd qwt-${QWT_VERSION}
           qmake6 qwt.pro -spec linux-g++ CONFIG+=release \
-            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0
+            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0 \
+            QWT_CONFIG-=QwtOpenGL
           make -j"$(nproc)"
           sudo make install          # installs to /usr/local/qwt-${QWT_VERSION}
           # register with ldconfig + make discoverable by the app's CMake
