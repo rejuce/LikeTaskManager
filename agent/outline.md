@@ -170,6 +170,8 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 | `0f83bbc` | libnethogs: explicit search + diagnostics |
 | `696b2aa` | **Root fix:** repo `ntop`→`raboof`, tag `0.8.8`→`v0.8.8`, header `src/libnethogs.h`, skip `meson install` |
 | `ec769dd` | Removed invalid `-Ddisable-wifi/-Ddisable-nvidia` meson options (not in v0.8.8) |
+| `dc606c5` | Symlink `qmake6`→`qmake` in `/usr/local/bin` (Qt5 is default on ubuntu-22.04) |
+| `25e1878` | `chmod +x` AppImage after bundling (linuxdeployqt omits exec bit) |
 
 ### Build Environment (OpenTerminal container, Debian 13)
 - **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)
