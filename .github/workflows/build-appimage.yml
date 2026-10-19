@@ -41,9 +41,10 @@ jobs:
           wget -q "https://downloads.sourceforge.net/project/qwt/qwt/${QWT_VERSION}/qwt-${QWT_VERSION}.tar.bz2" -O qwt.tar.bz2
           tar xf qwt.tar.bz2
           cd qwt-${QWT_VERSION}
+          # disable OpenGL (not available in ubuntu-22.04 Qt6; app doesn't use it)
+          sed -i 's/^QWT_CONFIG     += QwtOpenGL/#&/' qwtconfig.pri
           qmake6 qwt.pro -spec linux-g++ CONFIG+=release \
-            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0 \
-            QWT_CONFIG-=QwtOpenGL
+            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0
           make -j"$(nproc)"
           sudo make install          # installs to /usr/local/qwt-${QWT_VERSION}
           # register with ldconfig + make discoverable by the app's CMake
