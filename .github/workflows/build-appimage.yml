@@ -125,6 +125,7 @@ jobs:
           ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
             -appimage -bundle-non-qt-libs -verbose=2
           ls -lh LikeTaskManager-*.AppImage
+          chmod +x LikeTaskManager-*.AppImage
 
       # ------------------------------------------------------------------
       # Smoke test: run the AppImage headless on a virtual display and
