@@ -2,7 +2,18 @@
 
 ## Current Focus: Debugging Segfault on Lubuntu 24.04 (headless/VNC)
 
-### Status: Build fixed, debug instrumentation ready to test on target
+### Status: Segfault root cause identified and fixed
+
+### Segfault Fix (2025-06-15)
+- **Root cause:** `ProcessStatReader::update_process_list()` had three bugs:
+  1. `getpwuid()` can return `nullptr` (kernel threads, unknown UIDs) → null deref on `user->pw_name`
+  2. Broken removal logic: outer `/proc` loop index `i` used as index into `m_DataVec` (different collection)
+  3. `stringlist.at(1)` can throw on malformed `/proc` lines
+- **Fix:** Rewrote `update_process_list()`:
+  - Build a `QSet<int> livePids` from `/proc`, remove stale entries in reverse, add new PIDs
+  - Guard `getpwuid()` result — fall back to numeric UID string if null
+  - Guard `stringlist.at(1)` with `size() >= 2` checks
+- **Verification:** Full local build passes, all 7 unit tests pass.
 
 ### Build Fix (2025-06-15)
 - **Root cause:** `qdarkstyle/QDarkStyle.h` and `QDarkStyle.cpp` were never committed to git.
