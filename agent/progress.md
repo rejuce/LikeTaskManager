@@ -142,8 +142,41 @@ Goal: add unit tests to every module. Iterative approach: add tests for one modu
 | `processstatreader.h` | Added `friend class TestProcessReader` |
 | `perfitemwidget.h` | Added `friend class TestWidgets` |
 
+## 2026-10-19 (continued)
+
+### Step 5: GitHub Actions AppImage Workflow
+
+Goal: replace the old qmake-based Jenkins pipeline with a GitHub Actions workflow that builds the AppImage. **Local AppImage build was intentionally NOT pursued** (container has no FUSE device / Docker; host glibc 2.41 is too new for linuxdeployqt) — GitHub does the lifting on `ubuntu-22.04` (glibc 2.35, the compat sweet spot).
+
+- [x] Created `LikeTaskManager.desktop` (was missing from repo; required by linuxdeployqt for AppDir bundling)
+- [x] Created `.github/workflows/build-appimage.yml`:
+  - `runs-on: ubuntu-22.04` **without** a container override — the runner image itself ships glibc 2.35, which linuxdeployqt requires (≥ 2.36 trips the "new glibc" guard)
+  - Deps: Qt6 dev, Qwt built from SourceForge tarball → `/usr/local` (Qwt ships no CMake config)
+  - **libnethogs 0.8.8** from GitHub tarball (meson), plus:
+    - `patchelf --set-soname liblibnethogs.so liblibnethogs.so` — its meson build bakes in SONAME `liblibnethogs.so.undefined`, which makes linuxdeployqt bundle a useless `liblibnethogs.so.undefined` file
+    - compat symlinks `libnethogs.so` + flat `libnethogs.h` (project links `-lnethogs`)
+  - CMake build + `ctest`
+  - AppDir prep (binary, `.desktop`, icon) → `linuxdeployqt-continuous` AppImage with `-appimage -bundle-non-qt-libs`
+  - **Smoke test:** runs the AppImage for 10 s under `xvfb-run` and fails if it exits early (FUSE mounting works on GitHub runners)
+  - Uploads `LikeTaskManager-*.AppImage` as artifact
+
+### Local validation performed (pre-GitHub)
+- [x] Full CMake build of the app in this container: configure + compile + link OK
+- [x] Replicated the bundling steps: built linuxdeployqt **from source** (AppImage runtime can't mount here — no FUSE), ran it against a prepared AppDir → all Qt6 libs/plugins bundled correctly, `qt.conf` + icon + desktop entries in place
+- [x] **Found & fixed the nethogs SONAME bug** (would have shipped a broken AppImage): verified locally with `patchelf` that `NEEDED liblibnethogs.so` resolves in the AppDir
+- [x] AppDir sanity check: `ldd` on bundled binary resolves everything inside the AppDir (only glibc/libstdc++/libm/libgcc from the base system, as intended)
+- [x] Workflow YAML validated with `pyyaml`
+- [ ] **Not verified locally:** actual AppImage file creation + runtime smoke test (needs FUSE + glibc ≤ 2.35) → this is what the GitHub run will prove
+
+### Files changed
+| File | Change |
+|------|--------|
+| `.github/workflows/build-appimage.yml` | **New** — full build + bundle + smoke test + artifact pipeline |
+| `LikeTaskManager.desktop` | **New** — required by linuxdeployqt (AppDir `/usr/share/applications/`) |
+
 ## TODO / Next Steps
-- [ ] Commit `CMakeLists.txt` + qmake removals on `Qt6Cmake` branch (**needs approval**)
-- [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`)
+- [ ] Commit `CMakeLists.txt` + qmake removals + `.github/workflows/build-appimage.yml` + `LikeTaskManager.desktop` on `Qt6Cmake` branch (**needs approval**), push, and watch the first CI run
+- [ ] On first CI failure: likely candidates are Qwt tarball URL / nethogs tag availability — both pinned in `env:`
+- [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`) — or retire it in favour of GitHub Actions
 - [ ] Consider installing `qt6-l10n-tools` CMake package (`Qt6LinguistTools_DIR` missing) to enable translation generation
 - [ ] Remove `google867aaac7f0fdc31e.html` (owner verification file, not needed in repo)

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=LikeTaskManager
+Comment=System performance monitor for Linux
+Exec=LikeTaskManager
+Terminal=false
+Type=Application
+Icon=LikeTaskManager
+Categories=System;Monitor;Qt;
+Keywords=taskmanager;monitor;system;performance;

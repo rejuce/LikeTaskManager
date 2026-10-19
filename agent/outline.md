@@ -59,7 +59,10 @@ LikeTaskManager/
 │   ├── t_networkreader.cpp   # 9 tests — iface discovery, byte counters
 │   ├── t_processreader.cpp   # 8 tests — process list, nethogs graceful failure
 │   └── t_widgets.cpp         # 14 tests — PerfItemWidget + CPU/RAM/Disk/Network widgets
-├── Jenkinsfile               # CI pipeline config (still qmake-based — TODO: port to CMake)
+├── Jenkinsfile               # CI pipeline config (legacy qmake — superseded by GitHub Actions)
+├── .github/workflows/
+│   └── build-appimage.yml    # GitHub Actions: Qt6 + Qwt + libnethogs build → AppImage + smoke test + artifact
+├── LikeTaskManager.desktop   # Desktop entry (required by linuxdeployqt for AppImage bundling)
 │
 │── ── Misc ──
 ├── LikeTaskManager_de_AT.ts  # German (Austria) translation
@@ -149,8 +152,12 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 
 ### Known quirks
 - `Qt6LinguistTools` CMake package not installed in container (binaries exist at `/usr/lib/qt6/bin/`) → translation generation skipped
-- nethogs lib has SONAME `liblibnethogs.so.undefined` (its meson build) — harmless, same as qmake baseline
-- `Jenkinsfile` is still qmake-based and needs porting to CMake
+- nethogs lib ships with SONAME `liblibnethogs.so.undefined` (its meson build) — **must be fixed with `patchelf --set-soname liblibnethogs.so`** before AppImage bundling, otherwise linuxdeployqt bundles a file under the `.undefined` name. The GitHub Actions workflow does this at build time.
+- `Jenkinsfile` is still qmake-based and has been superseded by `.github/workflows/build-appimage.yml`
+
+## GitHub Actions AppImage Build (ADDED 2026-10-19)
+
+`.github/workflows/build-appimage.yml` — runs on `ubuntu-22.04` **without a container** (runner image glibc 2.35 is the max linuxdeployqt supports): install deps → build Qwt 6.3.0 (SourceForge tarball, no CMake config) → build libnethogs 0.8.8 (meson, SONAME fixed via patchelf, compat symlinks) → CMake build → ctest → AppDir + linuxdeployqt-continuous → smoke test under `xvfb-run` → upload AppImage artifact. Triggers on push/PR to `qt6`/`Qt6Cmake` + manual dispatch. Local AppImage build is not possible in the dev container (no FUSE, glibc 2.41).
 
 ### Build Environment (OpenTerminal container, Debian 13)
 - **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)

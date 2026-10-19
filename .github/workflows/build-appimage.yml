@@ -1,0 +1,124 @@
+name: Build AppImage
+
+on:
+  push:
+    branches: [ qt6, Qt6Cmake ]
+  pull_request:
+    branches: [ qt6, Qt6Cmake ]
+  workflow_dispatch:
+
+env:
+  QWT_VERSION: "6.3.0"
+  NETHOGS_VERSION: "0.8.8"
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-22.04
+    # glibc must be <= 2.35 for linuxdeployqt to produce a broadly compatible AppImage.
+    # The ubuntu-22.04 runner image itself ships glibc 2.35, so no container is needed.
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build meson \
+            git curl wget unzip xz-utils file patchelf libfuse2 \
+            desktop-file-utils xvfb \
+            qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
+            libqt6network6 libqt6widgets6 qt6-svg-dev \
+            libpcap-dev libnl-3-dev libnl-genl-3-dev
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # Qwt 6.x ships no CMake config; build from source into /usr/local
+      # ------------------------------------------------------------------
+      - name: Build Qwt
+        run: |
+          wget -q "https://downloads.sourceforge.net/project/qwt/qwt/${QWT_VERSION}/qwt-${QWT_VERSION}.tar.bz2" -O qwt.tar.bz2
+          tar xf qwt.tar.bz2
+          cmake -S qwt-${QWT_VERSION} -B build-qwt -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_DOCS=OFF
+          cmake --build build-qwt
+          sudo cmake --install build-qwt
+          sudo ldconfig
+
+      # ------------------------------------------------------------------
+      # libnethogs — its meson build produces liblibnethogs.so WITHOUT a
+      # proper SONAME ("liblibnethogs.so.undefined"). Fix the SONAME with
+      # patchelf so the AppImage bundles it correctly, and create the
+      # libnethogs.so symlink + flat header the project's CMakeLists expects.
+      # ------------------------------------------------------------------
+      - name: Build libnethogs
+        run: |
+          wget -q "https://github.com/ntop/nethogs/archive/refs/tags/${NETHOGS_VERSION}.tar.gz" -O nethogs.tar.gz
+          tar xzf nethogs.tar.gz
+          cd nethogs-${NETHOGS_VERSION}
+          meson setup build -Ddisable-wifi=true -Ddisable-nvidia=true
+          meson compile -C build
+          sudo meson install -C build
+          cd /usr/local/lib/x86_64-linux-gnu
+          # fix broken SONAME baked in by the meson build
+          sudo patchelf --set-soname liblibnethogs.so liblibnethogs.so
+          # compatibility symlink: project links against -lnethogs
+          sudo ln -sf liblibnethogs.so libnethogs.so
+          # flat header expected by CMakeLists: libnethogs.h
+          sudo ln -sf /usr/local/include/libnethogs/libnethogs.h /usr/local/include/libnethogs.h
+          sudo ldconfig
+
+      - name: Build LikeTaskManager
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Prepare AppDir
+        run: |
+          mkdir -p AppDir/usr/bin AppDir/usr/share/applications \
+                   AppDir/usr/share/icons/hicolor/256x256/apps
+          cp build/LikeTaskManager AppDir/usr/bin/
+          cp LikeTaskManager.desktop AppDir/usr/share/applications/
+          cp ltm.PNG AppDir/usr/share/icons/hicolor/256x256/apps/LikeTaskManager.png
+
+      - name: Download linuxdeployqt
+        run: |
+          curl -sL -o linuxdeployqt.AppImage \
+            https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+          chmod +x linuxdeployqt.AppImage
+
+      - name: Bundle AppImage
+        run: |
+          ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
+            -appimage -bundle-non-qt-libs -verbose=2
+          ls -lh LikeTaskManager-*.AppImage
+
+      # ------------------------------------------------------------------
+      # Smoke test: run the AppImage headless on a virtual display and
+      # confirm it stays alive for a few seconds.
+      # ------------------------------------------------------------------
+      - name: Smoke test AppImage
+        run: |
+          APPIMAGE=$(ls LikeTaskManager-*.AppImage)
+          xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 "$APPIMAGE" &
+          APP_PID=$!
+          sleep 10
+          if kill -0 $APP_PID 2>/dev/null; then
+            echo "AppImage started and stayed alive for 10s - OK"
+            kill $APP_PID 2>/dev/null || true
+          else
+            echo "::error::AppImage exited early"
+            exit 1
+          fi
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LikeTaskManager-x86_64.AppImage
+          path: LikeTaskManager-*.AppImage
+          if-no-files-found: error
