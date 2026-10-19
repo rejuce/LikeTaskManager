@@ -137,7 +137,7 @@ jobs:
           # Use --appimage-extract to unpack, then run AppRun directly.
           APPIMAGE=$(ls LikeTaskManager-*.AppImage)
           chmod +x "$APPIMAGE"
-          "$APPIMAGE" --appimage-extract
+          ./$APPIMAGE --appimage-extract
           xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 ./squashfs-root/AppRun &
           APP_PID=$!
           sleep 10
