@@ -119,10 +119,10 @@ ItemWidgets (QwtPlot curves) + static labels
 - Widget tests run offscreen: `QT_QPA_PLATFORM=offscreen`
 - Build & run: `cmake -S <repo> -B /tmp/ltm-test -G Ninja && cmake --build /tmp/ltm-test && cd /tmp/ltm-test && ctest --output-on-failure`
 
-#### Known bugs found in tests (documented, NOT fixed)
-1. `StatReader::filter_data_deque` — no size guard; deques < 13 elements cause `size_t` underflow (SIGSEGV). Production deques always 600 pts.
-2. `StatReader::stop()` — sets `m_quit = false` (no-op); thread cannot be stopped via public API.
-3. `cpustats.cpp` `get_cpus_activity_vector()` — NaN when total time is 0 (no guard).
+#### Bugs found and fixed
+1. `StatReader::filter_data_deque` — size guard added: deques < 13 elements return unchanged (was `size_t` underflow / SIGSEGV).
+2. `StatReader::stop()` — now sets `m_quit=true` and joins the thread (was a no-op setting `m_quit=false`).
+3. `cpustats.cpp` `get_cpus_activity_vector()` — returns 0.0f when total time is 0 (was NaN from divide-by-zero).
 
 ### UI
 - Single Qt Designer form: `ltm.ui` → compiled into `Ui::LTM`

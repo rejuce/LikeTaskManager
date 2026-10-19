@@ -60,7 +60,12 @@ std::vector<float> CPUStats::get_cpus_activity_vector()
             auto IDLE_TIME	= static_cast<float>(GetIdleTime(e2) - GetIdleTime(e1));
             auto TOTAL_TIME	= ACTIVE_TIME + IDLE_TIME;
 
-            retvec.emplace_back((100.f * ACTIVE_TIME / TOTAL_TIME));
+            // Guard against divide-by-zero when no time has elapsed (e.g.
+            // back-to-back samples on a very fast loop).  Return 0 %.
+            if(TOTAL_TIME > 0.f)
+                retvec.emplace_back((100.f * ACTIVE_TIME / TOTAL_TIME));
+            else
+                retvec.emplace_back(0.f);
 
 
         }

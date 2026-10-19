@@ -45,7 +45,7 @@ private slots:
     void filter_smooths_spike();
     void filter_requires_minimum_size();
     void start_runs_loop();
-    void stop_does_not_stop_thread(); // documents known bug
+    void stop_stops_thread(); // verifies the fixed stop()
     void template_loop_catches_exception();
 
 private:
@@ -105,15 +105,27 @@ void TestStatReader::filter_smooths_spike()
 
 void TestStatReader::filter_requires_minimum_size()
 {
-    // The filter walks k from size-3 down (9 iterations) and accesses k-2..k+2;
-    // last k is size-12, so minimum safe size is 13 (last k=2, k-2=0 valid).
-    // NOTE: sizes < 13 cause size_t underflow in k-2 (latent bug in StatReader.h
-    // — no size guard; verified: size 11 segfaults). All production callers keep
-    // their deques at m_dataPointsPerMinute (600), so this is unreachable there.
+    // The filter has a size guard: deques with fewer than 13 elements are
+    // returned unchanged (no-op) to prevent size_t underflow on k-2.
     DummyReader r;
-    auto data = make_deque({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13});
-    r.filter_data_deque(data); // must not crash
-    QCOMPARE(data.size(), static_cast<size_t>(13));
+
+    // Size 5: below the minimum, must be a no-op.
+    auto small = make_deque({1, 2, 3, 4, 5});
+    r.filter_data_deque(small);
+    QCOMPARE(small.size(), static_cast<size_t>(5));
+    QCOMPARE(small[0], 1.0);
+    QCOMPARE(small[4], 5.0);
+
+    // Size 12: still below the minimum, must be a no-op.
+    auto mid = make_deque({1,2,3,4,5,6,7,8,9,10,11,12});
+    r.filter_data_deque(mid);
+    QCOMPARE(mid[0], 1.0);
+    QCOMPARE(mid[11], 12.0);
+
+    // Size 13: exactly the minimum, filter runs and modifies data.
+    auto exact = make_deque({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13});
+    r.filter_data_deque(exact);
+    QCOMPARE(exact.size(), static_cast<size_t>(13));
 }
 
 void TestStatReader::start_runs_loop()
@@ -122,28 +134,31 @@ void TestStatReader::start_runs_loop()
     r.start();
     QThread::msleep(120);
     QVERIFY(r.loopCount > 0);
-    // Known bug: stop() sets m_quit=false, so the thread keeps running.
+    // stop() now correctly sets m_quit=true and joins the thread.
     r.stop();
-    QThread::msleep(60);
-    QVERIFY(r.loopCount > 0);
-    // Clean up: force quit and detach to avoid hanging at test end.
-    r.m_quit = true;
-    // Loop will exit on next iteration; detach so we don't join a dead thread state.
-    if (r.m_measureT.joinable()) {
-        // Give the loop a moment to observe m_quit.
-        QThread::msleep(50);
-        r.m_measureT.detach();
-    }
+    // After stop(), the thread has been joined — no longer joinable.
+    QVERIFY(!r.m_measureT.joinable());
+    // loopCount should be stable (no more iterations).
+    int countAfterStop = r.loopCount;
+    QThread::msleep(50);
+    QCOMPARE(r.loopCount, countAfterStop);
 }
 
-void TestStatReader::stop_does_not_stop_thread()
+void TestStatReader::stop_stops_thread()
 {
-    // Documents the existing bug: stop() sets m_quit = false (no-op),
-    // so after start() the loop cannot be stopped via the public API.
+    // Verifies the fixed stop(): sets m_quit=true and joins the thread.
     DummyReader r;
-    r.m_quit = true;
+    r.start();
+    QThread::msleep(100);
+    QVERIFY(r.loopCount > 0);
+    int countBefore = r.loopCount;
     r.stop();
-    QCOMPARE(r.m_quit, false);
+    // m_quit must be true after stop().
+    QVERIFY(r.m_quit);
+    // Thread must have been joined.
+    QVERIFY(!r.m_measureT.joinable());
+    // Loop count must be frozen.
+    QCOMPARE(r.loopCount, countBefore);
 }
 
 void TestStatReader::template_loop_catches_exception()

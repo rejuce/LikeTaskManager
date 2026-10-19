@@ -39,13 +39,15 @@ public:
 
     //default filter algorhytm for all the used data
     void filter_data_deque(std::deque<double>& data){
+        // The filter walks 9 positions starting at size-3 and accesses k-2..k+2.
+        // Minimum safe size is 13 (last k=2, k-2=0).  Guard against smaller
+        // deques which would cause size_t underflow on k-2.
+        if(data.size() < 13) return;
 
         size_t k = data.size()-3;
         for(int n=8; n>=0; n--){
-            //for(int k = +2; k < cpuYPlotData[i].size()-2; k++)
             data[k] = (data[k-2] + data[k-1] + data[k] +data[k+1] +data[k+2] )/ 5.0;
             k--;
-
         }
     }
 
@@ -58,7 +60,10 @@ public:
         });
         }
     }                                   //!< starts the measurment thread
-    void stop(){ m_quit=false;}                                    //!< stops the measurment thread
+    void stop(){
+        m_quit=true;
+        if(m_measureT.joinable()) m_measureT.join();
+    }                                   //!< stops the measurment thread
 
 
 

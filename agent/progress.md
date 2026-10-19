@@ -94,11 +94,11 @@ Goal: add unit tests to every module. Iterative approach: add tests for one modu
 | 6 | `processstatreader` | `t_processreader` | process list, nethogs graceful failure flags |
 | 7 | item widgets | `t_widgets` | PerfItemWidget + CPU/RAM/Disk/Network widget label updates (offscreen) |
 
-- [x] **t_statreader** (10 tests): empty initial state, device count, getStatData const reference, filter smooths a spike, minimum safe filter size, start() runs loop, exception swallowed by templateLoop, stop() bug documented. All pass.
-  - **Bug found (documented, not fixed):** `filter_data_deque` has no size guard — deques with size < 13 cause `size_t` underflow on `k-2` (verified: size 11 → SIGSEGV). Production deques are always 600 points, so unreachable in practice.
-  - **Bug found (documented, not fixed):** `stop()` sets `m_quit = false` — it is a no-op, the measurement thread cannot be stopped via public API.
-- [x] **t_cpustats** (10 tests): /proc/stat cpu count vs. direct count, activity vector size/range, "tot"+"0..N" naming, GetIdleTime/GetActiveTime arithmetic. All pass.
-  - Note: found that `get_cpus_activity_vector()` returns NaN when two samples have zero total time (e.g. back-to-back calls) — a latent bug in `cpustats.cpp` (no guard for `TOTAL_TIME == 0`). Test works around it with a 150ms sleep; the production code fix is a separate follow-up.
+- [x] **t_statreader** (10 tests): empty initial state, device count, getStatData const reference, filter smooths a spike, minimum safe filter size (verifies no-op for < 13), start() runs loop, stop() stops thread (verifies join), exception swallowed by templateLoop. All pass.
+  - **Bug found & fixed:** `filter_data_deque` size guard added — deques < 13 now return unchanged (was `size_t` underflow → SIGSEGV).
+  - **Bug found & fixed:** `stop()` now sets `m_quit=true` and joins the thread (was a no-op setting `m_quit=false`).
+- [x] **t_cpustats** (10 tests): /proc/stat cpu count vs. direct count, activity vector size/range, "tot"+"0..N" naming, GetIdleTime/GetActiveTime arithmetic, back-to-back call returns finite values (no NaN). All pass.
+  - **Bug found & fixed:** `get_cpus_activity_vector()` now returns 0.0f when `TOTAL_TIME == 0` (was NaN from divide-by-zero on back-to-back calls).
 - [x] **t_ramreader** (7 tests): device count/name ("GenMemory"), deque sizing (600 points), MemTotal parsing from /proc/meminfo, RamSizeKiB positive, live measurement loop populates deque. All pass.
   - **Approach:** used `friend class TestRamReader` in `StatReader.h` and `ramstatreader.h` for protected member access (cleaner than `#define private public` which breaks MOC).
   - Note: first measurement sample can be negative (MemAvailable > MemTotal transient in containers) — test checks for non-zero samples rather than strict 0..100 range.
@@ -118,10 +118,10 @@ Goal: add unit tests to every module. Iterative approach: add tests for one modu
 - [x] `ctest` in `/tmp/ltm-test`: **7/7 test suites pass, 0 failures** (total ~3.5s)
   - 68 individual test functions across 7 executables
 
-### Known bugs found (documented, NOT fixed)
-1. **`filter_data_deque` no size guard:** deques with size < 13 cause `size_t` underflow on `k-2` (size 11 → SIGSEGV). Production deques are always 600 points, so unreachable.
-2. **`stop()` no-op:** sets `m_quit = false` instead of `true`, so the measurement thread cannot be stopped via the public API.
-3. **`cpustats.cpp` NaN on zero total time:** `get_cpus_activity_vector()` divides by total time without guarding against 0 (back-to-back calls can produce NaN).
+### Bugs found and fixed
+1. **`filter_data_deque` no size guard (FIXED):** deques with size < 13 caused `size_t` underflow on `k-2` (size 11 → SIGSEGV). Fixed by adding `if(data.size() < 13) return;` guard at the top of the function. Test `filter_requires_minimum_size` now verifies no-op for sizes 5 and 12.
+2. **`stop()` no-op (FIXED):** was setting `m_quit = false` (no-op), so the measurement thread could not be stopped. Fixed to set `m_quit = true` and join the thread. Tests `start_runs_loop` and `stop_stops_thread` now verify correct stop behavior.
+3. **`cpustats.cpp` NaN on zero total time (FIXED):** `get_cpus_activity_vector()` divided by total time without guarding against 0 (back-to-back calls produced NaN). Fixed by adding `if(TOTAL_TIME > 0.f)` guard, returning 0.0f when no time elapsed. Test `idle_plus_active_covers_time` now calls back-to-back (no sleep) and asserts all values are finite.
 
 ### Files changed (test infrastructure)
 | File | Change |

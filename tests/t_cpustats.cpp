@@ -93,11 +93,14 @@ void TestCPUStats::activity_pairs_consistent()
 void TestCPUStats::idle_plus_active_covers_time()
 {
     (void)CPUStats::get_cpus_activity_vector();
-    QThread::msleep(150);
+    // Back-to-back call with NO sleep: previously produced NaN when
+    // TOTAL_TIME == 0.  The guard in get_cpus_activity_vector() now
+    // returns 0.0f for zero-elapsed-time entries, so all values must
+    // be finite.
     auto vec = CPUStats::get_cpus_activity_vector();
-    // The values must be finite (no NaN/inf from divide-by-zero on idle systems).
     for (float v : vec) {
-        QVERIFY(std::isfinite(v));
+        QVERIFY2(std::isfinite(v),
+                 qPrintable(QString("activity not finite on zero-elapsed sample: %1").arg(v)));
     }
 }
 
