@@ -155,9 +155,20 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 - nethogs lib ships with SONAME `liblibnethogs.so.undefined` (its meson build) — **must be fixed with `patchelf --set-soname liblibnethogs.so`** before AppImage bundling, otherwise linuxdeployqt bundles a file under the `.undefined` name. The GitHub Actions workflow does this at build time.
 - `Jenkinsfile` is still qmake-based and has been superseded by `.github/workflows/build-appimage.yml`
 
-## GitHub Actions AppImage Build (ADDED 2026-10-19)
+## GitHub Actions AppImage Build (ADDED 2026-10-19, CI ITERATION 2026-10-19)
 
-`.github/workflows/build-appimage.yml` — runs on `ubuntu-22.04` **without a container** (runner image glibc 2.35 is the max linuxdeployqt supports): install deps → build Qwt 6.3.0 (SourceForge tarball, no CMake config) → build libnethogs 0.8.8 (meson, SONAME fixed via patchelf, compat symlinks) → CMake build → ctest → AppDir + linuxdeployqt-continuous → smoke test under `xvfb-run` → upload AppImage artifact. Triggers on push/PR to `qt6`/`Qt6Cmake` + manual dispatch. Local AppImage build is not possible in the dev container (no FUSE, glibc 2.41).
+`.github/workflows/build-appimage.yml` — runs on `ubuntu-22.04` **without a container** (runner image glibc 2.35 is the max linuxdeployqt supports): install deps → build Qwt 6.3.0 (SourceForge tarball, `qmake6`, OpenGL disabled via `sed` on `qwtconfig.pri`) → build libnethogs **v0.8.8** from **`raboof/nethogs`** (meson, `.so` copied from build tree, SONAME fixed via patchelf, compat symlinks) → CMake build → ctest → AppDir + linuxdeployqt-continuous → smoke test under `xvfb-run` → upload AppImage artifact. Triggers on push/PR to `qt6`/`Qt6Cmake` + manual dispatch. Local AppImage build is not possible in the dev container (no FUSE, glibc 2.41).
+
+### CI Fix History (8 pushes to `Qt6Cmake`)
+| Commit | Fix |
+|--------|-----|
+| `acc2fd1` | `qt6-svg-dev` → `libqt6svg6-dev` (Ubuntu 22.04 package name) |
+| `6d5e1f0` | Qwt: `qmake6` build (no CMake in Qwt 6.x), added `make` to deps |
+| `303d1ec` | Qwt OpenGL: `sed qwtconfig.pri` (command-line vars don't work) |
+| `8c4c5d0` | Added `libgl-dev` (Qt6::Gui transitive libGL) |
+| `72ae939` | libnethogs: dynamic `.so` path lookup |
+| `0f83bbc` | libnethogs: explicit search + diagnostics |
+| `696b2aa` | **Root fix:** repo `ntop`→`raboof`, tag `0.8.8`→`v0.8.8`, header `src/libnethogs.h`, skip `meson install` |
 
 ### Build Environment (OpenTerminal container, Debian 13)
 - **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)

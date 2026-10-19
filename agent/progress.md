@@ -179,8 +179,28 @@ Goal: replace the old qmake-based Jenkins pipeline with a GitHub Actions workflo
 - [x] **Committed & pushed** `ac43cea` — GitHub Actions workflow + desktop file + agent docs
 - [x] **Committed & pushed** `552c16d` — README CMake update
 
+### Step 7: CI Iteration — Fixing GitHub Actions Failures
+
+Iterative fixes pushed to `Qt6Cmake` to get the CI workflow green. Each push triggers a new CI run:
+
+| Commit | Fix | Root Cause |
+|--------|-----|------------|
+| `acc2fd1` | `qt6-svg-dev` → `libqt6svg6-dev` | Ubuntu 22.04 package name (no `qt6-svg-dev` on jammy) |
+| `6d5e1f0` | Qwt: reverted to 6.3.0, build with `qmake6`+`make`, added symlinks for CMake | Qwt 6.x has NO CMake support (qmake-only). SourceForge tarball, not GitHub. Added `make` to apt deps. |
+| `402bf23` | Qwt: `QWT_CONFIG-=QwtOpenGL` (attempted) | Tried qmake command-line var — didn't work (runs before .pri parsing) |
+| `303d1ec` | Qwt: `sed -i 's/^QWT_CONFIG     += QwtOpenGL/#&/' qwtconfig.pri` | Correct fix: patch the .pri file before qmake runs |
+| `8c4c5d0` | Added `libgl-dev` to apt deps | Qt6::Gui transitively links libGL on Linux |
+| `72ae939` | libnethogs: replaced hard-coded `cd /usr/local/lib/x86_64-linux-gnu` with `find`-based lookup | meson install path varies by distro |
+| `0f83bbc` | libnethogs: added explicit `.so` search with diagnostic output, fallback to build tree | `find` could return empty → silent failure under `bash -e` |
+| `696b2aa` | **Root cause fix for libnethogs:** wrong repo (`ntop`→`raboof`), missing `v` prefix on tag (`0.8.8`→`v0.8.8`), header path fixed (`src/libnethogs.h`), skip `meson install` and copy `.so` from build tree directly | `ntop/nethogs` is 404. Correct repo is `raboof/nethogs`. Tags use `v` prefix. `wget` was silently failing → empty file → `tar` fails → exit 8 |
+
+### Key CI Knowledge
+- **Qwt 6.x:** No CMake support in any version (6.3.0, 6.4.0). Must build with `qmake6`. OpenGL must be disabled by sed-patching `qwtconfig.pri` (command-line qmake vars are set before `.pri` parsing, so `QWT_CONFIG-=QwtOpenGL` doesn't work).
+- **libnethogs:** NOT available as an apt package in Ubuntu/Debian. Must build from source. Correct repo: `raboof/nethogs` (not `ntop/nethogs`). Tags use `v` prefix (e.g., `v0.8.8`). Built with meson, `.so` copied manually from build tree (skipping `meson install`). SONAME fixed with `patchelf`.
+- **Runner:** `ubuntu-22.04` (glibc 2.35) without container override — required by linuxdeployqt.
+
 ## TODO / Next Steps
-- [ ] Watch the first CI run on GitHub (triggered by push to `Qt6Cmake`). Likely failure candidates: Qwt tarball URL / nethogs tag availability — both pinned in `env:`
+- [ ] Watch the next CI run (triggered by push `696b2aa`). Nethogs download should now succeed. Next potential failure points: libnethogs meson build, app CMake build, linuxdeployqt bundling, smoke test
 - [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`) — or retire it in favour of GitHub Actions
 - [ ] Consider installing `qt6-l10n-tools` CMake package (`Qt6LinguistTools_DIR` missing) to enable translation generation
 - [ ] Remove `google867aaac7f0fdc31e.html` (owner verification file, not needed in repo)
