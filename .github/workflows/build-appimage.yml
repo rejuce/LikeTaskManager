@@ -22,6 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build meson make \
+            libgl-dev \
             git curl wget unzip xz-utils file patchelf libfuse2 \
             desktop-file-utils xvfb \
             qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
