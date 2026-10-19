@@ -112,6 +112,14 @@ jobs:
             https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x linuxdeployqt.AppImage
 
+      - name: Ensure qmake points to Qt6
+        run: |
+          # ubuntu-22.04 ships both Qt5 and Qt6; default 'qmake' is Qt5.
+          # linuxdeployqt uses 'qmake' from $PATH to find the Qt version.
+          # Symlink qmake6 as qmake in /usr/local/bin (ahead of /usr/bin in PATH).
+          sudo ln -sf /usr/bin/qmake6 /usr/local/bin/qmake
+          qmake -query QT_VERSION
+
       - name: Bundle AppImage
         run: |
           ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
