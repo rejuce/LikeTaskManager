@@ -44,12 +44,34 @@ make -j$(nproc)
 QT_QPA_PLATFORM=offscreen ./LikeTaskManager
 ```
 
+## 2026-10-19
+
+### Step 3: CMake Migration (qmake → CMake)
+- [x] Created `CMakeLists.txt`:
+  - `find_package(Qt6 ... Core Gui Widgets Network)` + optional `LinguistTools`
+  - `CMAKE_AUTOMOC/AUTORCC/AUTOUIC` ON, C++17, `QT_DEPRECATED_WARNINGS` define
+  - Qwt located via `find_path`/`find_library` (no CMake config ships with Qwt); supports `-DQWT_ROOT=<prefix>`
+  - libnethogs via `find_library(NAMES libnethogs nethogs)` + `find_path(NETHOGS_INCLUDE_DIR NAMES libnethogs.h)`
+  - `ltm.ui` handled by AUTOUIC, `images.qrc` + `qdarkstyle/style.qrc` by AUTORCC
+  - `qt6_add_translations()` guarded by `Qt6LinguistTools_FOUND` (package not present in this container → skipped with warning)
+  - Install rule: `RUNTIME DESTINATION /opt/LikeTaskManager/bin`
+- [x] Fixed Qwt `find_path` to `qwt_plot.h` (headers installed flat, no `qwt/` subdir)
+- [x] Added `${CMAKE_CURRENT_SOURCE_DIR}` to target include path (headers use `#include <cpustatreader.h>` style)
+- [x] **Validated:** clean out-of-tree CMake+Ninja build in `/tmp/ltm-cmake` — configure + compile + link OK
+- [x] **Smoke test:** `QT_QPA_PLATFORM=offscreen ./LikeTaskManager` — all 5 stat readers start, nethogs loop fails gracefully (expected, unprivileged container), same behavior as qmake baseline
+- [x] `ldd` confirms linkage: `libqwt.so.6.3` + `liblibnethogs.so` (nethogs SONAME is `liblibnethogs.so.undefined` — baked into its meson build, identical to qmake baseline)
+- [x] Removed qmake artifacts via `git rm` (staged, NOT committed): `LikeTaskManager.pro`, `LikeTaskManager.pro.user`, `Makefile`, `.qmake.stash`
+- [x] Re-verified clean build after removal (`/tmp/ltm-cmake-verify`)
+
+### CMake build commands
+```bash
+cmake -S /workspace/repos/LikeTaskManager -B /tmp/ltm-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/ltm-cmake
+QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager
+```
+
 ## TODO / Next Steps
-- [ ] Create `CMakeLists.txt` replacing `LikeTaskManager.pro`
-- [ ] Replace hardcoded Qwt path with `find_package(Qwt)` or `find_package(Qt6Widgets)` + Qwt
-- [ ] Add `qt_add_resources()` for `.qrc` files
-- [ ] Add `qt6_add_translations()` for `.ts` file
-- [ ] Handle `libnethogs` linkage via CMake
-- [ ] Remove `Makefile`, `.qmake.stash`, `LikeTaskManager.pro.user`
-- [ ] Test build with CMake + Qt6
+- [ ] Commit `CMakeLists.txt` + qmake removals on `Qt6Cmake` branch (**needs approval**)
+- [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`)
+- [ ] Consider installing `qt6-l10n-tools` CMake package (`Qt6LinguistTools_DIR` missing) to enable translation generation
 - [ ] Remove `google867aaac7f0fdc31e.html` (owner verification file, not needed in repo)
