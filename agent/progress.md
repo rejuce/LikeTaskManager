@@ -174,9 +174,13 @@ Goal: replace the old qmake-based Jenkins pipeline with a GitHub Actions workflo
 | `.github/workflows/build-appimage.yml` | **New** — full build + bundle + smoke test + artifact pipeline |
 | `LikeTaskManager.desktop` | **New** — required by linuxdeployqt (AppDir `/usr/share/applications/`) |
 
+### Step 6: README Update + Commits
+- [x] Updated `README.md`: replaced qmake build steps with CMake, added Qwt CMake build, libnethogs SONAME fix, unit test instructions, GitHub Actions AppImage note, removed `.pro` symlink workaround
+- [x] **Committed & pushed** `ac43cea` — GitHub Actions workflow + desktop file + agent docs
+- [x] **Committed & pushed** `552c16d` — README CMake update
+
 ## TODO / Next Steps
-- [ ] Commit `CMakeLists.txt` + qmake removals + `.github/workflows/build-appimage.yml` + `LikeTaskManager.desktop` on `Qt6Cmake` branch (**needs approval**), push, and watch the first CI run
-- [ ] On first CI failure: likely candidates are Qwt tarball URL / nethogs tag availability — both pinned in `env:`
+- [ ] Watch the first CI run on GitHub (triggered by push to `Qt6Cmake`). Likely failure candidates: Qwt tarball URL / nethogs tag availability — both pinned in `env:`
 - [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`) — or retire it in favour of GitHub Actions
 - [ ] Consider installing `qt6-l10n-tools` CMake package (`Qt6LinguistTools_DIR` missing) to enable translation generation
 - [ ] Remove `google867aaac7f0fdc31e.html` (owner verification file, not needed in repo)
