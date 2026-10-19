@@ -123,6 +123,15 @@ else()
 endif()
 
 # --------------------------------------------------------------------------
+# Tests
+# --------------------------------------------------------------------------
+option(LTM_BUILD_TESTS "Build unit tests" ON)
+if(LTM_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# --------------------------------------------------------------------------
 # Install
 # --------------------------------------------------------------------------
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION /opt/LikeTaskManager/bin)

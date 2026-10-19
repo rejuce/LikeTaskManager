@@ -49,6 +49,7 @@ public:
 
 
     friend class LTM;
+    friend class TestNetworkReader;
 
 signals:
     void data_ready();

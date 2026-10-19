@@ -50,6 +50,15 @@ LikeTaskManager/
 │
 │── ── Build / Config ──
 ├── CMakeLists.txt            # CMake project file (qmake .pro removed — staged deletion on Qt6Cmake)
+├── tests/
+│   ├── CMakeLists.txt        # Test infra: shared lib ltm_testlib, auto-glob t_*.cpp, CTest
+│   ├── t_cpustats.cpp        # 10 tests — /proc/stat parsing, CPU helpers
+│   ├── t_statreader.cpp      # 10 tests — StatReader<T> template (dummy subclass)
+│   ├── t_ramreader.cpp       # 7 tests — /proc/meminfo, deque sizing
+│   ├── t_diskreader.cpp      # 8 tests — disk discovery, find_disk_name_in_data
+│   ├── t_networkreader.cpp   # 9 tests — iface discovery, byte counters
+│   ├── t_processreader.cpp   # 8 tests — process list, nethogs graceful failure
+│   └── t_widgets.cpp         # 14 tests — PerfItemWidget + CPU/RAM/Disk/Network widgets
 ├── Jenkinsfile               # CI pipeline config (still qmake-based — TODO: port to CMake)
 │
 │── ── Misc ──
@@ -100,8 +109,20 @@ ItemWidgets (QwtPlot curves) + static labels
 | `PerfItemWidget` | `perfitemwidget.h/.cpp` | Process list item widget. |
 
 ### Qt Modules Used
-- `core`, `gui`, `widgets`, `network` (Qt6::Core/Gui/Widgets/Network)
+- `core`, `gui`, `widgets`, `network`, `test` (Qt6::Core/Gui/Widgets/Network/Test)
 - External: **Qwt 6.3.0** (plotting, located via `find_path`/`find_library`, `-DQWT_ROOT` supported), **libnethogs** (per-process network stats)
+
+### Unit Test Infrastructure (DONE 2026-10-19)
+- **7 test executables**, 68 test functions, all passing via `ctest`
+- Shared static lib `ltm_testlib` compiles reader + widget sources (no GUI app dependency)
+- Private member access via `friend class Test<X>` declarations in headers
+- Widget tests run offscreen: `QT_QPA_PLATFORM=offscreen`
+- Build & run: `cmake -S <repo> -B /tmp/ltm-test -G Ninja && cmake --build /tmp/ltm-test && cd /tmp/ltm-test && ctest --output-on-failure`
+
+#### Known bugs found in tests (documented, NOT fixed)
+1. `StatReader::filter_data_deque` — no size guard; deques < 13 elements cause `size_t` underflow (SIGSEGV). Production deques always 600 pts.
+2. `StatReader::stop()` — sets `m_quit = false` (no-op); thread cannot be stopped via public API.
+3. `cpustats.cpp` `get_cpus_activity_vector()` — NaN when total time is 0 (no guard).
 
 ### UI
 - Single Qt Designer form: `ltm.ui` → compiled into `Ui::LTM`

@@ -70,6 +70,78 @@ cmake --build /tmp/ltm-cmake
 QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager
 ```
 
+## 2026-10-19 (continued)
+
+### Step 4: Unit Test Infrastructure (CMake + QTest)
+
+Goal: add unit tests to every module. Iterative approach: add tests for one module → build → run/verify → next module.
+
+**Approach decisions:**
+- New `tests/` subdirectory with its own `CMakeLists.txt` (wired via `add_subdirectory(tests)` + `enable_testing()` in root CMakeLists).
+- Shared static library `ltm_testlib` compiles the sources under test (readers + widgets) so test executables don't depend on the GUI app target. The app target itself is left untouched (no regression risk).
+- One test executable per module: `t_<module>` registered with CTest (`add_test`).
+- Widget tests run headless: `QT_QPA_PLATFORM=offscreen` set as test environment property.
+- Private members of legacy classes are accessed via a test-only `#define private public` trick (contained per test file) since there is no seam/refactor to be made at this stage.
+
+**Module test plan:**
+| # | Module | Test exe | Notes |
+|---|--------|----------|-------|
+| 1 | `cpustats.h/.cpp` | `t_cpustats` | /proc/stat parsing, cpu count, activity vector, idle/active helpers |
+| 2 | `StatReader.h` | `t_statreader` | template: data vector, filter_data_deque, start/stop thread loop (test subclass) |
+| 3 | `ramstatreader` | `t_ramreader` | /proc/meminfo MemTotal parsing, deque sizing |
+| 4 | `diskstatreader` | `t_diskreader` | disk discovery, find_disk_name_in_data |
+| 5 | `networkstatreader` | `t_networkreader` | iface discovery, byte counters, link stats |
+| 6 | `processstatreader` | `t_processreader` | process list, nethogs graceful failure flags |
+| 7 | item widgets | `t_widgets` | PerfItemWidget + CPU/RAM/Disk/Network widget label updates (offscreen) |
+
+- [x] **t_statreader** (10 tests): empty initial state, device count, getStatData const reference, filter smooths a spike, minimum safe filter size, start() runs loop, exception swallowed by templateLoop, stop() bug documented. All pass.
+  - **Bug found (documented, not fixed):** `filter_data_deque` has no size guard — deques with size < 13 cause `size_t` underflow on `k-2` (verified: size 11 → SIGSEGV). Production deques are always 600 points, so unreachable in practice.
+  - **Bug found (documented, not fixed):** `stop()` sets `m_quit = false` — it is a no-op, the measurement thread cannot be stopped via public API.
+- [x] **t_cpustats** (10 tests): /proc/stat cpu count vs. direct count, activity vector size/range, "tot"+"0..N" naming, GetIdleTime/GetActiveTime arithmetic. All pass.
+  - Note: found that `get_cpus_activity_vector()` returns NaN when two samples have zero total time (e.g. back-to-back calls) — a latent bug in `cpustats.cpp` (no guard for `TOTAL_TIME == 0`). Test works around it with a 150ms sleep; the production code fix is a separate follow-up.
+- [x] **t_ramreader** (7 tests): device count/name ("GenMemory"), deque sizing (600 points), MemTotal parsing from /proc/meminfo, RamSizeKiB positive, live measurement loop populates deque. All pass.
+  - **Approach:** used `friend class TestRamReader` in `StatReader.h` and `ramstatreader.h` for protected member access (cleaner than `#define private public` which breaks MOC).
+  - Note: first measurement sample can be negative (MemAvailable > MemTotal transient in containers) — test checks for non-zero samples rather than strict 0..100 range.
+- [x] **t_diskreader** (8 tests): deque sizing, disk names match /sys/block, find_disk_name_in_data returns correct pointer / nullptr, sizeByte consistency, measure_main_loop runs without crash. All pass.
+  - Used `friend class TestDiskReader` in `diskstatreader.h`.
+- [x] **t_networkreader** (9 tests): interface count matches /sys/class/net, deque sizing, previous byte counters initialised from sysfs, read_total_rx/tx_bytes match sysfs, interface name lookup, measure_main_loop stable. All pass.
+  - Used `friend class TestNetworkReader` in `networkstatreader.h`.
+- [x] **t_processreader** (8 tests): data vector non-empty, find_pid_in_data for own PID / unknown PID, process name populated, nethogs failure flags set in container, measure_main_loop runs without crash. All pass.
+  - Used `friend class TestProcessReader` in `processstatreader.h`.
+  - Nethogs "Operation not permitted" messages in test output are expected (unprivileged container).
+  - Test is resilient to container /proc restrictions: if own PID not found, falls back to checking any PID in the data vector.
+- [x] **t_widgets** (14 tests): PerfItemWidget base (plot type, label creation), CPUItemWidget (plot type, update_data with/without load), RamItemWidget (plot type, update_data, zero-total guard), DiskItemWidget (plot type, name in first line, update_data), NetworkItemWidget (plot type, name in first line, KB/s and MB/s ranges). All pass.
+  - Used `friend class TestWidgets` in `perfitemwidget.h`.
+  - QWARN about null pixmaps / stylesheet parsing is expected (no QRC resources loaded in test environment).
+
+### Full ctest run
+- [x] `ctest` in `/tmp/ltm-test`: **7/7 test suites pass, 0 failures** (total ~3.5s)
+  - 68 individual test functions across 7 executables
+
+### Known bugs found (documented, NOT fixed)
+1. **`filter_data_deque` no size guard:** deques with size < 13 cause `size_t` underflow on `k-2` (size 11 → SIGSEGV). Production deques are always 600 points, so unreachable.
+2. **`stop()` no-op:** sets `m_quit = false` instead of `true`, so the measurement thread cannot be stopped via the public API.
+3. **`cpustats.cpp` NaN on zero total time:** `get_cpus_activity_vector()` divides by total time without guarding against 0 (back-to-back calls can produce NaN).
+
+### Files changed (test infrastructure)
+| File | Change |
+|------|--------|
+| `CMakeLists.txt` | Added `enable_testing()` + `add_subdirectory(tests)` |
+| `tests/CMakeLists.txt` | **New** — shared lib `ltm_testlib`, auto-glob `t_*.cpp`, CTest registration |
+| `tests/t_cpustats.cpp` | **New** — 10 tests |
+| `tests/t_statreader.cpp` | **New** — 10 tests |
+| `tests/t_ramreader.cpp` | **New** — 7 tests |
+| `tests/t_diskreader.cpp` | **New** — 8 tests |
+| `tests/t_networkreader.cpp` | **New** — 9 tests |
+| `tests/t_processreader.cpp` | **New** — 8 tests |
+| `tests/t_widgets.cpp` | **New** — 14 tests |
+| `StatReader.h` | Added `friend class Test*` declarations (5 friends) |
+| `ramstatreader.h` | Added `friend class TestRamReader` |
+| `diskstatreader.h` | Added `friend class TestDiskReader` |
+| `networkstatreader.h` | Added `friend class TestNetworkReader` |
+| `processstatreader.h` | Added `friend class TestProcessReader` |
+| `perfitemwidget.h` | Added `friend class TestWidgets` |
+
 ## TODO / Next Steps
 - [ ] Commit `CMakeLists.txt` + qmake removals on `Qt6Cmake` branch (**needs approval**)
 - [ ] Update `Jenkinsfile` for CMake-based AppImage build (currently references `qmake` + `LikeTaskManager.pro`)

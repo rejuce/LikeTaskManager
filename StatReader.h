@@ -64,6 +64,11 @@ public:
 
 protected:
     friend class LTM;
+    friend class TestStatReader;
+    friend class TestRamReader;
+    friend class TestDiskReader;
+    friend class TestNetworkReader;
+    friend class TestProcessReader;
     constexpr static int m_dataPointsPerMinute=600;  //wir machen das abtastinterval nicht varibel, wir wollen alle 100ms eine Messung die 1 Minute ergibt
     constexpr static int m_widgetDataModulus = 5;
     constexpr static int m_staticDataModulus = 50;

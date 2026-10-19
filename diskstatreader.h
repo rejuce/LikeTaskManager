@@ -47,6 +47,7 @@ struct rawDiskStat{
 
 class DiskStatReader: public QObject, public StatReader<StatTypes::DiskData>
 {
+    friend class TestDiskReader;
     Q_OBJECT
 
 public:
