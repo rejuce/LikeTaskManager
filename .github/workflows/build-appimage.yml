@@ -9,7 +9,7 @@ on:
 
 env:
   QWT_VERSION: "6.3.0"
-  NETHOGS_VERSION: "0.8.8"
+  NETHOGS_VERSION: "v0.8.8"
 
 jobs:
   build-appimage:
@@ -55,47 +55,38 @@ jobs:
           sudo ln -sfn /usr/local/qwt-${QWT_VERSION}/lib/libqwt.so* /usr/local/lib/
 
       # ------------------------------------------------------------------
-      # libnethogs — its meson build produces liblibnethogs.so WITHOUT a
-      # proper SONAME ("liblibnethogs.so.undefined"). Fix the SONAME with
-      # patchelf so the AppImage bundles it correctly, and create the
-      # libnethogs.so symlink + flat header the project's CMakeLists expects.
+      # libnethogs — built with meson. Skip 'meson install' (it fails on
+      # some runners) and copy artifacts from the build tree instead.
+      # The meson build bakes in a broken SONAME, so fix with patchelf.
       # ------------------------------------------------------------------
       - name: Build libnethogs
         run: |
-          wget -q "https://github.com/ntop/nethogs/archive/refs/tags/${NETHOGS_VERSION}.tar.gz" -O nethogs.tar.gz
+          wget -q "https://github.com/raboof/nethogs/archive/refs/tags/${NETHOGS_VERSION}.tar.gz" -O nethogs.tar.gz
           tar xzf nethogs.tar.gz
-          cd nethogs-${NETHOGS_VERSION}
+          cd nethogs-${NETHOGS_VERSION#v}
           meson setup build -Ddisable-wifi=true -Ddisable-nvidia=true
           meson compile -C build
-          sudo meson install -C build
-          # locate the .so — meson may put it in /usr/local/lib, /usr/local/lib/<multiarch>,
-          # or even leave it only in the build tree
-          echo "--- nethogs install search ---"
-          find /usr/local -name '*nethogs*' 2>/dev/null || true
-          SOFILE=$(find /usr/local -name 'liblibnethogs.so' -o -name 'liblibnethogs.so.*' 2>/dev/null | head -1)
+          # find the built .so in the build tree
+          SOFILE=$(find build -name 'liblibnethogs.so*' -type f | head -1)
           if [ -z "$SOFILE" ]; then
-            # fallback: look in the build tree
-            SOFILE=$(find build -name 'liblibnethogs.so*' 2>/dev/null | head -1)
-          fi
-          if [ -z "$SOFILE" ]; then
-            echo "::error::libnethogs .so not found after meson install"
+            echo "::error::libnethogs .so not found in build tree"
+            find build -name '*.so*' 2>/dev/null
             exit 1
           fi
           echo "Found: $SOFILE"
-          LIBDIR=$(dirname "$SOFILE")
-          BASENAME=$(basename "$SOFILE" .so*)
-          # ensure unversioned symlink exists
-          if [ ! -f "$LIBDIR/liblibnethogs.so" ]; then
-            sudo ln -sf "$(basename "$SOFILE")" "$LIBDIR/liblibnethogs.so"
-          fi
+          # copy to /usr/local/lib
+          sudo cp "$SOFILE" /usr/local/lib/liblibnethogs.so
           # fix broken SONAME baked in by the meson build
-          sudo patchelf --set-soname liblibnethogs.so "$LIBDIR/liblibnethogs.so"
+          sudo patchelf --set-soname liblibnethogs.so /usr/local/lib/liblibnethogs.so
           # compatibility symlink: project links against -lnethogs
-          sudo ln -sf liblibnethogs.so "$LIBDIR/libnethogs.so"
+          sudo ln -sf liblibnethogs.so /usr/local/lib/libnethogs.so
+          # install header (it's in src/libnethogs.h)
+          sudo mkdir -p /usr/local/include/libnethogs
+          sudo cp src/libnethogs.h /usr/local/include/libnethogs/
           # flat header expected by CMakeLists: libnethogs.h
-          sudo ln -sf /usr/local/include/libnethogs/libnethogs.h /usr/local/include/libnethogs.h
-          # make discoverable by CMake find_library
-          echo "$LIBDIR" | sudo tee /etc/ld.so.conf.d/libnethogs.conf
+          sudo ln -sf libnethogs/libnethogs.h /usr/local/include/libnethogs.h
+          # make discoverable
+          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/libnethogs.conf
           sudo ldconfig
 
       - name: Build LikeTaskManager
