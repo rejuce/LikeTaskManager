@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build meson \
+            build-essential cmake ninja-build meson make \
             git curl wget unzip xz-utils file patchelf libfuse2 \
             desktop-file-utils xvfb \
             qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
@@ -36,15 +36,20 @@ jobs:
       # ------------------------------------------------------------------
       - name: Build Qwt
         run: |
+          # Qwt 6.3.0 ships no CMakeLists.txt (CMake support added in 6.4.0),
+          # so build with qmake which is available on ubuntu-22.04
           wget -q "https://downloads.sourceforge.net/project/qwt/qwt/${QWT_VERSION}/qwt-${QWT_VERSION}.tar.bz2" -O qwt.tar.bz2
           tar xf qwt.tar.bz2
-          cmake -S qwt-${QWT_VERSION} -B build-qwt -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_DOCS=OFF
-          cmake --build build-qwt
-          sudo cmake --install build-qwt
+          cd qwt-${QWT_VERSION}
+          qmake6 qwt.pro -spec linux-g++ CONFIG+=release \
+            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0
+          make -j"$(nproc)"
+          sudo make install          # installs to /usr/local/qwt-${QWT_VERSION}
+          # register with ldconfig + make discoverable by the app's CMake
+          echo "/usr/local/qwt-${QWT_VERSION}/lib" | sudo tee /etc/ld.so.conf.d/qwt.conf
           sudo ldconfig
+          sudo ln -sfn /usr/local/qwt-${QWT_VERSION}/include /usr/local/include/qwt
+          sudo ln -sfn /usr/local/qwt-${QWT_VERSION}/lib/libqwt.so* /usr/local/lib/
 
       # ------------------------------------------------------------------
       # libnethogs — its meson build produces liblibnethogs.so WITHOUT a
