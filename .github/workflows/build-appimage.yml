@@ -68,9 +68,26 @@ jobs:
           meson setup build -Ddisable-wifi=true -Ddisable-nvidia=true
           meson compile -C build
           sudo meson install -C build
-          # find where meson put the .so (varies by distro: /usr/local/lib or /usr/local/lib/<multiarch>)
-          LIBDIR=$(dirname $(find /usr/local/lib -name 'liblibnethogs.so*' -not -name '*.so.*' | head -1))
-          echo "libnethogs installed to: $LIBDIR"
+          # locate the .so — meson may put it in /usr/local/lib, /usr/local/lib/<multiarch>,
+          # or even leave it only in the build tree
+          echo "--- nethogs install search ---"
+          find /usr/local -name '*nethogs*' 2>/dev/null || true
+          SOFILE=$(find /usr/local -name 'liblibnethogs.so' -o -name 'liblibnethogs.so.*' 2>/dev/null | head -1)
+          if [ -z "$SOFILE" ]; then
+            # fallback: look in the build tree
+            SOFILE=$(find build -name 'liblibnethogs.so*' 2>/dev/null | head -1)
+          fi
+          if [ -z "$SOFILE" ]; then
+            echo "::error::libnethogs .so not found after meson install"
+            exit 1
+          fi
+          echo "Found: $SOFILE"
+          LIBDIR=$(dirname "$SOFILE")
+          BASENAME=$(basename "$SOFILE" .so*)
+          # ensure unversioned symlink exists
+          if [ ! -f "$LIBDIR/liblibnethogs.so" ]; then
+            sudo ln -sf "$(basename "$SOFILE")" "$LIBDIR/liblibnethogs.so"
+          fi
           # fix broken SONAME baked in by the meson build
           sudo patchelf --set-soname liblibnethogs.so "$LIBDIR/liblibnethogs.so"
           # compatibility symlink: project links against -lnethogs
