@@ -133,8 +133,12 @@ jobs:
       # ------------------------------------------------------------------
       - name: Smoke test AppImage
         run: |
+          # GitHub Actions runners lack FUSE, so AppImages can't self-extract.
+          # Use --appimage-extract to unpack, then run AppRun directly.
           APPIMAGE=$(ls LikeTaskManager-*.AppImage)
-          xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 "$APPIMAGE" &
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract
+          xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 ./squashfs-root/AppRun &
           APP_PID=$!
           sleep 10
           if kill -0 $APP_PID 2>/dev/null; then
