@@ -25,7 +25,7 @@ jobs:
             git curl wget unzip xz-utils file patchelf libfuse2 \
             desktop-file-utils xvfb \
             qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
-            libqt6network6 libqt6widgets6 qt6-svg-dev \
+            libqt6network6 libqt6widgets6 libqt6svg6-dev \
             libpcap-dev libnl-3-dev libnl-genl-3-dev
 
       - name: Checkout sources
