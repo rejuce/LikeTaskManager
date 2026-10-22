@@ -1,5 +1,16 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: Tagged v4.0.2 on latest master build
+- Latest master build `06dddba` tagged **v4.0.2** (annotated) and pushed to origin.
+- `v4.0.1` was kept as-is on the old Qt6Cmake commit `a0f0b90` (per decision; no
+  v4.0.1 GitHub Release existed, only the tag).
+- Pushing the tag triggers the workflow (`tags: [ 'v*' ]` no longer in master workflow —
+  note: master workflow triggers on push/PR to master, not tags). Check whether the
+  release job ran; master workflow's release job condition is
+  `startsWith(github.ref, 'refs/tags/v')` and needs `release:` job — if the master
+  workflow lacks tag triggers, publish manually via `workflow_dispatch`.
+
+
 ## 2026-10-22: master — drop system `zsync` step (linuxdeployqt already makes .zsync)
 - **Root cause of CI failure:** ubuntu-22.04's system `zsync` is old (0.0.8): it
   rejects `--make-sync-file` (`invalid option -- '-'`) and its `MakeSyncFile`
