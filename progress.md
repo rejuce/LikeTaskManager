@@ -1,14 +1,15 @@
 # LikeTaskManager — Progress
 
-## 2026-10-22: Tagged v4.0.2 on latest master build
-- Latest master build `06dddba` tagged **v4.0.2** (annotated) and pushed to origin.
-- `v4.0.1` was kept as-is on the old Qt6Cmake commit `a0f0b90` (per decision; no
-  v4.0.1 GitHub Release existed, only the tag).
-- Pushing the tag triggers the workflow (`tags: [ 'v*' ]` no longer in master workflow —
-  note: master workflow triggers on push/PR to master, not tags). Check whether the
-  release job ran; master workflow's release job condition is
-  `startsWith(github.ref, 'refs/tags/v')` and needs `release:` job — if the master
-  workflow lacks tag triggers, publish manually via `workflow_dispatch`.
+## 2026-10-22: Tagged v4.0.2 + added tag trigger & release job to master workflow
+- Latest master build tagged **v4.0.2** (annotated). `v4.0.1` kept as-is on old
+  Qt6Cmake commit `a0f0b90` (per decision; no v4.0.1 GitHub Release existed).
+- **Problem:** the master workflow had no tag trigger and no `release:` job, so the
+  initial tag push (at `06dddba`) did not run CI.
+- **Fix:** ported from Qt6Cmake workflow (commit `d7c9cab`): `tags: [ 'v*' ]` trigger,
+  `permissions: contents: write`, and a `release:` job (publishes AppImage + .zsync
+  as GitHub Release via softprops/action-gh-release, on v* tags / manual dispatch).
+- **Tag re-pointed:** `v4.0.2` force-pushed from `06dddba` to `d7c9cab` so the tag
+  run uses the fixed workflow. This triggers build + release jobs.
 
 
 ## 2026-10-22: master — drop system `zsync` step (linuxdeployqt already makes .zsync)
