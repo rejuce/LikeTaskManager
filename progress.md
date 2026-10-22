@@ -1,5 +1,14 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: Fixed AppImage name + .zsync autoupdate (CI workflow)
+- AppImage file name is now constant: `LikeTaskManager-x86_64.AppImage` (renamed after bundling;
+  linuxdeployqt used to embed the commit SHA via the project VERSION).
+- linuxdeployqt now called with `-updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"`
+  (autoupdate from the latest GitHub Release).
+- CI creates `LikeTaskManager-x86_64.AppImage.zsync` via `zsync MakeSyncFile` and uploads it
+  as an artifact + GitHub Release asset.
+- Change only in `.github/workflows/build-appimage.yml`. Not committed (awaiting approval).
+
 ## Current Focus: Debugging Segfault on Lubuntu 24.04 (headless/VNC)
 
 ### Status: Segfault root cause identified and fixed

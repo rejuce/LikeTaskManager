@@ -170,6 +170,16 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 - `permissions: contents: write` added at workflow level (required for creating releases).
 - **How to release:** `git tag v1.0.0 && git push origin v1.0.0` → workflow builds + creates release `v1.0.0` with the AppImage asset.
 
+### Fixed AppImage Name + .zsync (ADDED 2026-10-22, uncommitted)
+- linuxdeployqt derives the AppImage file name from the project VERSION (commit SHA with
+  default checkout depth) → renamed to constant **`LikeTaskManager-x86_64.AppImage`** after bundling.
+- linuxdeployqt called with `-updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"`
+  so the AppImage runtime auto-updates from the **latest GitHub Release** (the `.zsync`
+  file is published as a release asset; GitHub's `latest` redirect always resolves to the newest release).
+- New CI step creates `LikeTaskManager-x86_64.AppImage.zsync` (`zsync MakeSyncFile`; `zsync` added to apt deps);
+  both files are uploaded as artifacts and published as release assets (`files: release-assets/*`).
+
+
 ### CI Fix History (8 pushes to `Qt6Cmake`)
 | Commit | Fix |
 |--------|-----|

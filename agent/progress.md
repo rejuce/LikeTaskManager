@@ -1,5 +1,29 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## 2026-10-22 (later)
+
+### Step: Fixed AppImage name + .zsync autoupdate file (workflow)
+- Problem: linuxdeployqt derives the AppImage file name from the project VERSION,
+  which (with `actions/checkout` and no `fetch-depth: 0`) is the **commit SHA** —
+  so every build produced a differently named AppImage (e.g. `LikeTaskManager-<sha>.AppImage`).
+- [x] `.github/workflows/build-appimage.yml`:
+  - Renamed `LikeTaskManager-*.AppImage` → `LikeTaskManager-x86_64.AppImage` right after bundling
+    (fixed name, no commit SHA in it)
+  - Added `-updateinformation="zsync|https://appimgupdate.grapho-metronic.com/LikeTaskManager-x86_64.AppImage.zsync"`
+    to the linuxdeployqt call so the embedded runtime checks the zsync endpoint for updates
+  - Added `zsync` to the apt install list
+  - New step "Create .zsync file" → `zsync MakeSyncFile LikeTaskManager-x86_64.AppImage`
+  - Smoke test now uses the fixed file name
+  - Uploads a second artifact `LikeTaskManager-x86_64.AppImage.zsync`
+  - `release` job now also downloads the `.zsync` artifact and publishes **both**
+    files as release assets (`files: release-assets/*`)
+- [x] YAML validated (python yaml.safe_load)
+- The zsync endpoint points at the **latest GitHub Release**:
+  `https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync`
+  (GitHub's `latest` redirect resolves to the newest release; the `.zsync` file is
+  published as a release asset by the `release` job).
+- **Not committed** — awaiting approval.
+
 ## 2026-10-22
 
 ### Step: GitHub Release Publishing (workflow)
@@ -8,8 +32,9 @@
   - Downloads `LikeTaskManager-x86_64.AppImage` artifact → `softprops/action-gh-release@v2` publishes it as a release asset (`generate_release_notes: true`)
   - Added `permissions: contents: write` and `tags: [ 'v*' ]` trigger
 - [x] YAML validated (python yaml.safe_load)
-- **How to create a release:** commit + push, then `git tag v1.0.0 && git push origin v1.0.0`
-- **NOT committed/pushed yet — awaiting user approval.**
+- **How to create a release:** commit + push, then `git tag vX.Y.Z && git push origin vX.Y.Z`
+- [x] Committed (`5b30771`), rebased onto remote (`e2cbb4f`, a master→Qt6Cmake merge landed meanwhile), pushed `Qt6Cmake` (`ceacc8a`)
+- [x] **Released `v4.0.0`:** tag created + pushed to origin (2026-10-22) — workflow builds + publishes the GitHub Release with the AppImage asset
 - Updated `agent/outline.md` with release-job docs.
 
 ## 2026-07-14
