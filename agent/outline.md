@@ -27,6 +27,7 @@ LikeTaskManager/
 ├── diskstatreader.h/.cpp     # DiskStatReader : StatReader<DiskData> — reads /proc/diskstats
 ├── networkstatreader.h/.cpp  # NetworkStatReader : StatReader<NetworkData> — reads /sys/class/net/
 ├── processstatreader.h/.cpp  # ProcessStatReader : StatReader<ProcessData> — /proc + libnethogs
+├── processgroup.h/.cpp       # ProcessGroup struct + aggregate_processes() — groups same-name PIDs
 │
 │── ── Item Widgets (UI panels, one per stat category) ──
 ├── cpuitemwidget.h/.cpp      # CPU panel: usage %, clock speed, core count, QwtPlot
@@ -105,11 +106,13 @@ ItemWidgets (QwtPlot curves) + static labels
 | `DiskStatReader` | `diskstatreader.h/.cpp` | Reads `/proc/diskstats` for per-disk I/O. Dynamically discovers disks. |
 | `NetworkStatReader` | `networkstatreader.h/.cpp` | Reads `/sys/class/net/` for per-interface tx/rx. Dynamically discovers interfaces. |
 | `ProcessStatReader` | `processstatreader.h/.cpp` | Reads `/proc/[pid]/` + libnethogs for per-process CPU, memory, disk, network. |
+| `ProcessGroup` | `processgroup.h/.cpp` | Groups same-named processes: aggregated CPU/mem/disk/net + count. Used by QTreeWidget. |
 | `CPUItemWidget` | `cpuitemwidget.h/.cpp` | CPU tab UI: core count, usage %, clock speed, QwtPlot. |
 | `RamItemWidget` | `ramitemwidget.h/.cpp` | RAM tab UI: total/used/swap, QwtPlot. |
 | `DiskItemWidget` | `diskitemwidget.h/.cpp` | Disk tab UI: per-disk read/write rate, IOPS, QwtPlot. |
 | `NetworkItemWidget` | `networkitemwidget.h/.cpp` | Network tab UI: per-iface tx/rx, link speed, QwtPlot. |
 | `PerfItemWidget` | `perfitemwidget.h/.cpp` | Process list item widget. |
+| **Process tab (QTreeWidget)** | `ltm.cpp` `handle_process_data()` | Groups by name, expandable per-PID children. Kill button kills group or single PID. |
 
 ### Qt Modules Used
 - `core`, `gui`, `widgets`, `network`, `test` (Qt6::Core/Gui/Widgets/Network/Test)
@@ -185,5 +188,11 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 
 ## Git Info
 - **Remote:** `origin` → `github.com:rejuce/LikeTaskManager.git`
-- **Branches:** `master` (Qt5 legacy), `Qt5-final`, `qt6` (base), `Qt6Cmake` (working)
+- **Branches:** `master` (Qt5 legacy), `Qt5-final`, `qt6` (base), `Qt6Cmake` (working), `qtree-process-view` (Issue #12)
+
+## Issue #12 — Process Grouping (Branch: `qtree-process-view`)
+- **Status:** Implemented, visually verified on Xvfb. Pending: full ctest + commit.
+- **New files:** `processgroup.h`, `processgroup.cpp`, `tests/t_processgroup.cpp`
+- **Modified:** `ltm.h`, `ltm.cpp`, `ltm.ui` (QTableWidget → QTreeWidget), `CMakeLists.txt`, `tests/CMakeLists.txt`
+- **Screenshots:** `screenshot_processes_collapsed.png`, `screenshot_processes_grouped.png` (repo root, untracked)
 - **SSH key:** `/workspace/repos/keys/github`

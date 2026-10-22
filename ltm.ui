@@ -1996,7 +1996,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QTableWidget" name="tableWProcess">
+         <widget class="QTreeWidget" name="treeWProcess">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -2015,11 +2015,8 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
-          </property>
-          <property name="dragDropOverwriteMode">
-           <bool>false</bool>
+          <property name="rootIsDecorated">
+           <bool>true</bool>
           </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
@@ -2033,18 +2030,15 @@
           <property name="sortingEnabled">
            <bool>true</bool>
           </property>
-          <attribute name="horizontalHeaderCascadingSectionResizes">
-           <bool>false</bool>
-          </attribute>
-          <attribute name="horizontalHeaderMinimumSectionSize">
-           <number>30</number>
-          </attribute>
-          <attribute name="verticalHeaderCascadingSectionResizes">
+          <property name="uniformRowHeights">
            <bool>true</bool>
-          </attribute>
+          </property>
+          <property name="columnCount">
+           <number>7</number>
+          </property>
           <column>
            <property name="text">
-            <string>PID</string>
+            <string>Process(es)</string>
            </property>
            <property name="font">
             <font>
@@ -2122,7 +2116,23 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="butKillProcess">
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QPushButton" name="butExpandAllProcesses">
+            <property name="text">
+             <string>Expand All</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="butCollapseAllProcesses">
+            <property name="text">
+             <string>Collapse All</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="butKillProcess">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -2132,7 +2142,9 @@
           <property name="text">
            <string>Kill Process (Root Required for non user processes)</string>
           </property>
-         </widget>
+          </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

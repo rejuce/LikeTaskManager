@@ -54,6 +54,9 @@ private slots:
 
     void on_butKillProcess_clicked();
 
+    void on_butExpandAllProcesses_clicked();
+    void on_butCollapseAllProcesses_clicked();
+
     void load_services();
 
 private:
