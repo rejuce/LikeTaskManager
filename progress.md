@@ -1,5 +1,16 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: master — drop system `zsync` step (linuxdeployqt already makes .zsync)
+- **Root cause of CI failure:** ubuntu-22.04's system `zsync` is old (0.0.8): it
+  rejects `--make-sync-file` (`invalid option -- '-'`) and its `MakeSyncFile`
+  subcommand also fails. Version-dependent, unreliable.
+- **Fix:** Removed the standalone zsync step entirely. linuxdeployqt already
+  generates `LikeTaskManager-x86_64.AppImage.zsync` during bundling (embedded
+  `zsyncmake` + `-updateinformation` → log: "hence generating zsync file").
+  The step now only verifies the file exists. `zsync` dropped from apt deps.
+- Change only in `.github/workflows/build-appimage.yml`. YAML validated.
+- **Committed & pushed to `origin/master`** (via SSH key `/workspace/repos/keys/github`).
+
 ## 2026-10-22: master — bring AppImage workflow to parity + fix `zsync MakeSyncFile` (exit 3)
 - Reset local `master` to `origin/master` (`490fb83`) and committed directly there.
 - **Root cause of CI failure:** modern `zsync` (0.8.x on ubuntu-22.04) removed the
