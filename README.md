@@ -22,7 +22,7 @@ gives a very comprehensive overview but is hard to keep a good overview.
 ## How to Install?  
 
 Just download appimage from release tab, give execute permission and thats it. Should work on all Linux flavours equal or newer than 
-Ubut 16.04. No messing with dpendencies, no install, just run.
+Ubut 16.04 (for Qt5 Version) or 20.04 for Qt6. No messing with dpendencies, no install, just run.
 It can always be updated by clicking in the topbar "Gereral-> UpdateApp" pulling the latest version via deltaupdate using appimageupdate from Github.
 
 
@@ -130,14 +130,21 @@ smoke test, and uploads the AppImage.
 
 ## How does it work?
 All the stats are collected by using sysfs or Linux Kernel API. For networking stats per process  libnethogs/pcap, the underlying library of the popular tool "nethogs" is used. 
+The qt6 version also depends on >qwt6.3, which need to be build from source. Debian packages curretly exist up to 6.1.3 which does not support qt6
 
 
 ## Current state and outlook?  
 Right now the core functionality is there. 
 There are some additonal static information to be grabbed and a bit more polishing to be done. 
-Also dynamically adding and removing disk (for example unplugging USB drive) will be added soon.
+Also dynamically adding and removing disk (for example unplugging USB drive)
 
 
 In the future it would be nice to additionally gather GPU stats, which is rather hard as there is no gerneral API, same for bluetooth stats. 
 
-If other people find it usefull I am also open to feature requests.
+If other people find it useful I am also open to feature requests.
+
+If you are feeling generous and like what the tool does for you I am happy about some donations
+
+[![Donate via PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=WQSZJF7HXVF8N)
+
+
