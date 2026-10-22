@@ -1,5 +1,6 @@
 #include "processstatreader.h"
 #include <QDir>
+#include <QSet>
 #include <mutex>
 #include <QTextStream>
 #include <QThread>
@@ -172,79 +173,70 @@ void ProcessStatReader::measure_main_loop()
 
 void ProcessStatReader::update_process_list()
 {
-    //find current block device disk it seems it can be dertermined by the existence of device folder in /sys/block/<dev>/device
     QString syspath("/proc");
     QDir pids(syspath);
     auto list = pids.entryList();
     list.removeFirst(); //remove .
     list.removeFirst(); //remove ..
 
-
-    for(int i=0; i<list.size();i++){
-        bool isNumber=false;
-        int pid = list[i].toInt(&isNumber,10);
-        if(!isNumber) {
-            list.removeAt(i);
-            i--;
-        }
-        else if(find_pid_in_data(pid)==nullptr) {//not existent yet, add new entry and populate static data members
-            StatTypes::ProcessData record;
-
-            record.pid = pid;
-
-
-            QFile f("/proc/"+list[i] +"/status");
-            f.open(QIODevice::ReadOnly | QIODevice::Text);
-            if(f.isOpen()){
-
-                QTextStream in(&f);
-
-                QString line = in.readLine().simplified();
-                while(!line.isNull()){
-
-                    if(line.startsWith("Name")){
-                        auto stringlist = line.split(" ");
-                        record.name = stringlist.at(1); //* 9.53674E-7;//9.3132257461548E-7;
-                        //auto stringlistBase = model.split(" @ ");
-                    }
-
-                    if(line.startsWith("Uid")){
-                        auto stringlist = line.split(" ");
-                        passwd* user =  getpwuid(stringlist.at(1).toInt());
-                        record.user =  QString(user->pw_name);//* 9.53674E-7;//9.3132257461548E-7;
-                        //auto stringlistBase = model.split(" @ ");
-                        //delete *user;
-                        break;
-                    }
-
-                    line = in.readLine().simplified();
-                }
-                //only add record if there was enough permission to read it
-                std::lock_guard<std::mutex> lck(m_DataVecMutex);
-                m_DataVec.push_back(std::move(record));
-
-            }
-
-
-
-        }
-        std::lock_guard<std::mutex> lck(m_DataVecMutex);
-        //now check if there are processes listed that are non existent
-        bool found=false;
-        for(int i=0; i<m_DataVec.size(); i++)
-            if(m_DataVec[i].pid == pid) found= true;
-        if(!found && i<m_DataVec.size()) m_DataVec.removeAt(i); //entry in adatavec that is not in proc anymore -> remove termindated process
-
-
-
-
+    // Build the set of PIDs currently in /proc
+    QSet<int> livePids;
+    for(const auto& entry : list){
+        bool isNumber = false;
+        int pid = entry.toInt(&isNumber, 10);
+        if(isNumber) livePids.insert(pid);
     }
 
+    // Remove entries that no longer exist in /proc
+    {
+        std::lock_guard<std::mutex> lck(m_DataVecMutex);
+        for(int i = m_DataVec.size()-1; i >= 0; i--){
+            if(!livePids.contains(m_DataVec[i].pid))
+                m_DataVec.removeAt(i);
+        }
+    }
 
+    // Add new PIDs not yet in m_DataVec
+    for(int i=0; i<list.size(); i++){
+        bool isNumber=false;
+        int pid = list[i].toInt(&isNumber,10);
+        if(!isNumber) continue;
 
+        if(find_pid_in_data(pid) != nullptr) continue; // already tracked
 
+        StatTypes::ProcessData record;
+        record.pid = pid;
 
+        QFile f("/proc/" + list[i] + "/status");
+        f.open(QIODevice::ReadOnly | QIODevice::Text);
+        if(f.isOpen()){
+            QTextStream in(&f);
+            QString line = in.readLine().simplified();
+            while(!line.isNull()){
+                if(line.startsWith("Name")){
+                    auto stringlist = line.split(' ', Qt::SkipEmptyParts);
+                    if(stringlist.size() >= 2)
+                        record.name = stringlist.at(1);
+                }
+                if(line.startsWith("Uid")){
+                    auto stringlist = line.split(' ', Qt::SkipEmptyParts);
+                    if(stringlist.size() >= 2){
+                        auto* user = getpwuid(stringlist.at(1).toUInt());
+                        if(user)
+                            record.user = QString::fromLatin1(user->pw_name);
+                        else
+                            record.user = QString::number(stringlist.at(1).toUInt());
+                    }
+                    break;
+                }
+                line = in.readLine().simplified();
+            }
+            f.close();
 
+            std::lock_guard<std::mutex> lck(m_DataVecMutex);
+            m_DataVec.push_back(std::move(record));
+        }
+    }
 }
 
 StatTypes::ProcessData *ProcessStatReader::find_pid_in_data(int pid)

@@ -59,6 +59,7 @@ signals:
 
 private:
     friend void nethogsCallBack(int action, NethogsMonitorRecord const *data);
+    friend class TestProcessReader;
     std::thread nethogsT;
     void update_process_list();
     StatTypes::ProcessData* find_pid_in_data(int pid);  //!< looks for supplied disk name in data vector, if not foudn return nullptr

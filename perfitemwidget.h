@@ -24,6 +24,7 @@ public:
     void set_icon(QString path);
 
 protected:
+    friend class TestWidgets;
     QLabel* m_firstLineTxt= nullptr;
     QLabel* m_secondLineTxt= nullptr;
     QLabel* m_icon = nullptr;

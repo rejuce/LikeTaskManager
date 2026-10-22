@@ -20,6 +20,7 @@ struct RamData{
 
 class RamStatReader : public QObject, public StatReader<StatTypes::RamData>
 {
+    friend class TestRamReader;
     Q_OBJECT
 public:
     explicit RamStatReader(QObject *parent = nullptr);

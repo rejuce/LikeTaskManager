@@ -1,0 +1,157 @@
+name: Build AppImage
+
+on:
+  push:
+    branches: [ qt6, Qt6Cmake ]
+  pull_request:
+    branches: [ qt6, Qt6Cmake ]
+  workflow_dispatch:
+
+env:
+  QWT_VERSION: "6.3.0"
+  NETHOGS_VERSION: "v0.8.8"
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-22.04
+    # glibc must be <= 2.35 for linuxdeployqt to produce a broadly compatible AppImage.
+    # The ubuntu-22.04 runner image itself ships glibc 2.35, so no container is needed.
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build meson make \
+            libgl-dev \
+            git curl wget unzip xz-utils file patchelf libfuse2 \
+            desktop-file-utils xvfb \
+            qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
+            libqt6network6 libqt6widgets6 libqt6svg6-dev \
+            libpcap-dev libnl-3-dev libnl-genl-3-dev
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # Qwt 6.x ships no CMake config; build from source into /usr/local
+      # ------------------------------------------------------------------
+      - name: Build Qwt
+        run: |
+          # Qwt 6.x ships no CMakeLists.txt (qmake-only),
+          # so build with qmake6 which is available on ubuntu-22.04
+          wget -q "https://downloads.sourceforge.net/project/qwt/qwt/${QWT_VERSION}/qwt-${QWT_VERSION}.tar.bz2" -O qwt.tar.bz2
+          tar xf qwt.tar.bz2
+          cd qwt-${QWT_VERSION}
+          # disable OpenGL (not available in ubuntu-22.04 Qt6; app doesn't use it)
+          sed -i 's/^QWT_CONFIG     += QwtOpenGL/#&/' qwtconfig.pri
+          qmake6 qwt.pro -spec linux-g++ CONFIG+=release \
+            QWT_BUILD_EXAMPLES=0 QWT_BUILD_TESTS=0 QWT_BUILD_DOCS=0
+          make -j"$(nproc)"
+          sudo make install          # installs to /usr/local/qwt-${QWT_VERSION}
+          # register with ldconfig + make discoverable by the app's CMake
+          echo "/usr/local/qwt-${QWT_VERSION}/lib" | sudo tee /etc/ld.so.conf.d/qwt.conf
+          sudo ldconfig
+          sudo ln -sfn /usr/local/qwt-${QWT_VERSION}/include /usr/local/include/qwt
+          sudo ln -sfn /usr/local/qwt-${QWT_VERSION}/lib/libqwt.so* /usr/local/lib/
+
+      # ------------------------------------------------------------------
+      # libnethogs — built with meson. Skip 'meson install' (it fails on
+      # some runners) and copy artifacts from the build tree instead.
+      # The meson build bakes in a broken SONAME, so fix with patchelf.
+      # ------------------------------------------------------------------
+      - name: Build libnethogs
+        run: |
+          wget -q "https://github.com/raboof/nethogs/archive/refs/tags/${NETHOGS_VERSION}.tar.gz" -O nethogs.tar.gz
+          tar xzf nethogs.tar.gz
+          cd nethogs-${NETHOGS_VERSION#v}
+          meson setup build
+          meson compile -C build
+          # find the built .so in the build tree
+          SOFILE=$(find build -name 'liblibnethogs.so*' -type f | head -1)
+          if [ -z "$SOFILE" ]; then
+            echo "::error::libnethogs .so not found in build tree"
+            find build -name '*.so*' 2>/dev/null
+            exit 1
+          fi
+          echo "Found: $SOFILE"
+          # copy to /usr/local/lib
+          sudo cp "$SOFILE" /usr/local/lib/liblibnethogs.so
+          # fix broken SONAME baked in by the meson build
+          sudo patchelf --set-soname liblibnethogs.so /usr/local/lib/liblibnethogs.so
+          # compatibility symlink: project links against -lnethogs
+          sudo ln -sf liblibnethogs.so /usr/local/lib/libnethogs.so
+          # install header (it's in src/libnethogs.h)
+          sudo mkdir -p /usr/local/include/libnethogs
+          sudo cp src/libnethogs.h /usr/local/include/libnethogs/
+          # flat header expected by CMakeLists: libnethogs.h
+          sudo ln -sf libnethogs/libnethogs.h /usr/local/include/libnethogs.h
+          # make discoverable
+          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/libnethogs.conf
+          sudo ldconfig
+
+      - name: Build LikeTaskManager
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Prepare AppDir
+        run: |
+          mkdir -p AppDir/usr/bin AppDir/usr/share/applications \
+                   AppDir/usr/share/icons/hicolor/256x256/apps
+          cp build/LikeTaskManager AppDir/usr/bin/
+          cp LikeTaskManager.desktop AppDir/usr/share/applications/
+          cp ltm.PNG AppDir/usr/share/icons/hicolor/256x256/apps/LikeTaskManager.png
+
+      - name: Download linuxdeployqt
+        run: |
+          curl -sL -o linuxdeployqt.AppImage \
+            https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+          chmod +x linuxdeployqt.AppImage
+
+      - name: Ensure qmake points to Qt6
+        run: |
+          # ubuntu-22.04 ships both Qt5 and Qt6; default 'qmake' is Qt5.
+          # linuxdeployqt uses 'qmake' from $PATH to find the Qt version.
+          # Symlink qmake6 as qmake in /usr/local/bin (ahead of /usr/bin in PATH).
+          sudo ln -sf /usr/bin/qmake6 /usr/local/bin/qmake
+          qmake -query QT_VERSION
+
+      - name: Bundle AppImage
+        run: |
+          ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
+            -appimage -bundle-non-qt-libs -verbose=2
+          ls -lh LikeTaskManager-*.AppImage
+          chmod +x LikeTaskManager-*.AppImage
+
+      # ------------------------------------------------------------------
+      # Smoke test: run the AppImage headless on a virtual display and
+      # confirm it stays alive for a few seconds.
+      # ------------------------------------------------------------------
+      - name: Smoke test AppImage
+        run: |
+          # GitHub Actions runners lack FUSE, so AppImages can't self-extract.
+          # Use --appimage-extract to unpack, then run AppRun directly.
+          APPIMAGE=$(ls LikeTaskManager-*.AppImage)
+          chmod +x "$APPIMAGE"
+          ./$APPIMAGE --appimage-extract
+          xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 ./squashfs-root/AppRun &
+          APP_PID=$!
+          sleep 10
+          if kill -0 $APP_PID 2>/dev/null; then
+            echo "AppImage started and stayed alive for 10s - OK"
+            kill $APP_PID 2>/dev/null || true
+          else
+            echo "::error::AppImage exited early"
+            exit 1
+          fi
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LikeTaskManager-x86_64.AppImage
+          path: LikeTaskManager-*.AppImage
+          if-no-files-found: error

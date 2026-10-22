@@ -30,10 +30,14 @@ LTM::LTM(QWidget *parent)
     , updateprocess(nullptr)
 
 {
+    std::cout << "[LTM ctor] entering" << std::endl;
+
     ui->setupUi(this);
+    std::cout << "[LTM ctor] setupUi done" << std::endl;
 
     connect(ui->actionUpdate,&QAction::triggered,this, &LTM::selfUpdate);
     connect(ui->actionInfo,&QAction::triggered,this, &LTM::printInfo);
+    std::cout << "[LTM ctor] actions connected" << std::endl;
 
 
     // Setup headers once
@@ -48,14 +52,23 @@ LTM::LTM(QWidget *parent)
 
     //setting up plots
     try {
+        std::cout << "[LTM ctor] setup_cpu_plots..." << std::endl;
         setup_cpu_plots();
+        std::cout << "[LTM ctor] setup_cpu_plots done" << std::endl;
+        std::cout << "[LTM ctor] setup_network_plots..." << std::endl;
         setup_network_plots();
+        std::cout << "[LTM ctor] setup_network_plots done" << std::endl;
+        std::cout << "[LTM ctor] setup_ram_plots..." << std::endl;
         setup_ram_plots();
+        std::cout << "[LTM ctor] setup_ram_plots done" << std::endl;
+        std::cout << "[LTM ctor] setup_disk_plots..." << std::endl;
         setup_disk_plots();
+        std::cout << "[LTM ctor] setup_disk_plots done" << std::endl;
         for(double i=0.0; i<600; i++){
 
             xAchsisBase600.push_back(i);
         }
+        std::cout << "[LTM ctor] xAchsisBase600 filled" << std::endl;
     } catch (std::exception& e) {
         qDebug() << "execption when setting up plots: " << e.what();
     } catch (...){
@@ -65,84 +78,93 @@ LTM::LTM(QWidget *parent)
 
 
 
-
-
-
-
     try {
+        std::cout << "[LTM ctor] starting CPUStatReader..." << std::endl;
         m_CPUStatReaderT.start();
     } catch (std::exception& e) {
         qDebug() << "execption when initialising CPUreader: " << e.what();
     } catch (...){
         qDebug() << "unknown execption occured when initialising CPUreader";
     }
-       qDebug()<< "cpu stat reader started";
+       std::cout << "[LTM ctor] cpu stat reader started" << std::endl;
 
 
 
 
     try {
+        std::cout << "[LTM ctor] starting RamStatReader..." << std::endl;
         m_RamStatReaderT.start();
     } catch (std::exception& e) {
         qDebug() << "execption when initialising RamStatReader: " << e.what();
     } catch (...){
         qDebug() << "unknown execption occured when initialising RamStatReader";
     }
-    qDebug()<< "ram stat reader started";
+    std::cout << "[LTM ctor] ram stat reader started" << std::endl;
 
 
 
     try {
+        std::cout << "[LTM ctor] starting DiskStatReader..." << std::endl;
         m_DiskStatReaderT.start();
     } catch (std::exception& e) {
-        qDebug() << "execption when DiskStatReader: " << e.what();
+        qDebug() << "execption when initialising DiskStatReader: " << e.what();
     } catch (...){
         qDebug() << "unknown execption occured when initialising DiskStatReader";
     }
-       qDebug()<< "disk stat reader started";
+       std::cout << "[LTM ctor] disk stat reader started" << std::endl;
 
 
     try {
+        std::cout << "[LTM ctor] starting NetworkStatReader..." << std::endl;
         m_NetworkStatReaderT.start();
     } catch (std::exception& e) {
-        qDebug() << "execption when NetworkStatReader: " << e.what();
+        qDebug() << "execption when initialising NetworkStatReader: " << e.what();
     } catch (...){
         qDebug() << "unknown execption occured when initialising NetworkStatReader";
     }
-        qDebug()<< "network stat reader started";
+        std::cout << "[LTM ctor] network stat reader started" << std::endl;
 
 
 
     try {
+        std::cout << "[LTM ctor] starting ProcessStatReader..." << std::endl;
         m_ProcessStatReaderT.start();
     } catch (std::exception& e) {
-        qDebug() << "execption when ProcessStatReader: " << e.what();
+        qDebug() << "execption when initialising ProcessStatReader: " << e.what();
     } catch (...){
         qDebug() << "unknown execption occured when initialising ProcessStatReader";
     }
-        qDebug()<< "process stat reader started";
+        std::cout << "[LTM ctor] process stat reader started" << std::endl;
 
 
     //assembling the left ItemWidget with currently present devices
-    qDebug()<< "assembling the left ItemWidget with currently present devices";
+    std::cout << "[LTM ctor] assembling the left ItemWidget with currently present devices" << std::endl;
 try {
-    qDebug()<< "creating CPU entry";
+    std::cout << "[LTM ctor] creating CPU entry" << std::endl;
     m_cpuItemWidgetPtr = new CPUItemWidget("CPU",ui->listWidget);
-    qDebug()<< "creating RAM entry";
+    std::cout << "[LTM ctor] creating RAM entry" << std::endl;
     m_RamItemWidgetPtr =   new RamItemWidget("RAM",ui->listWidget);
    // m_SwapItemWidgetPtr = new RamItemWidget("SWAP",ui->listWidget);
-    qDebug()<< "creating DISK entries";
+    std::cout << "[LTM ctor] creating DISK entries (count=" << m_DiskStatReaderT.getDeviceCount() << ")" << std::endl;
 
     for(int i=0; i<m_DiskStatReaderT.getDeviceCount(); i++){
         m_DiskItemWidgetPtrVec.push_back(new DiskItemWidget(m_DiskStatReaderT.getStatData(i).diskType,m_DiskStatReaderT.getStatData(i).diskName,ui->listWidget));
     }
-    qDebug()<< "creating Network entries";
+    std::cout << "[LTM ctor] creating Network entries (count=" << m_NetworkStatReaderT.getDeviceCount() << ")" << std::endl;
     for(int i=0; i<m_NetworkStatReaderT.getDeviceCount(); i++){
         m_EthItemWidgetPtrVec.push_back(new NetworkItemWidget(m_NetworkStatReaderT.getStatData(i).AdapterName,ui->listWidget));
     }
 
-    ui->listWidget->item(0)->setSelected(true);
-    on_listWidget_itemClicked(ui->listWidget->item(0));
+    std::cout << "[LTM ctor] listWidget count=" << ui->listWidget->count() << std::endl;
+    if(ui->listWidget->count() == 0){
+        std::cerr << "[LTM ctor] FATAL: listWidget is empty - no items to select!" << std::endl;
+    } else {
+        std::cout << "[LTM ctor] selecting item(0): " << ui->listWidget->item(0)->text().toStdString() << std::endl;
+        ui->listWidget->item(0)->setSelected(true);
+        std::cout << "[LTM ctor] calling on_listWidget_itemClicked..." << std::endl;
+        on_listWidget_itemClicked(ui->listWidget->item(0));
+        std::cout << "[LTM ctor] on_listWidget_itemClicked done" << std::endl;
+    }
     } catch (std::exception& e) {
         qDebug() << "execption when assembling ItemWidget: " << e.what();
     } catch (...){
@@ -151,27 +173,30 @@ try {
 
 
 
-
     if(connect(&m_CPUStatReaderT,&CPUStatReader::data_ready,this,&LTM::plot_cpu_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "cpu stat reader connected";
+        std::cout << "[LTM ctor] cpu stat reader connected" << std::endl;
 
     if(connect(&m_RamStatReaderT,&RamStatReader::data_ready,this,&LTM::plot_ram_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "ram stat reader connected";
+        std::cout << "[LTM ctor] ram stat reader connected" << std::endl;
 
     if(connect(&m_DiskStatReaderT,&DiskStatReader::data_ready,this,&LTM::plot_disk_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "disk stat reader connected";
+        std::cout << "[LTM ctor] disk stat reader connected" << std::endl;
 
     if(connect(&m_NetworkStatReaderT,&NetworkStatReader::data_ready,this,&LTM::plot_network_activity ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "network stat reader connected";
+        std::cout << "[LTM ctor] network stat reader connected" << std::endl;
 
     if(connect(&m_ProcessStatReaderT,&ProcessStatReader::data_ready,this,&LTM::handle_process_data ,Qt::ConnectionType::QueuedConnection))
-        qDebug()<< "process stat reader connected";
+        std::cout << "[LTM ctor] process stat reader connected" << std::endl;
+
+    std::cout << "[LTM ctor] DONE" << std::endl;
 }
 
 LTM::~LTM()
 {
     delete ui;
 }
+
+
 
 
 
@@ -184,10 +209,13 @@ void LTM::deselectAllCategories()
 
 
 
-
-
 void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
+    std::cout << "[LTM::on_listWidget_itemClicked] called, item=" << (item ? item->text().toStdString() : "nullptr") << std::endl;
     auto perfItemWidetPtr = dynamic_cast<PerfItemWidget*>(item);
+    if(!perfItemWidetPtr){
+        std::cerr << "[LTM::on_listWidget_itemClicked] dynamic_cast to PerfItemWidget returned nullptr!" << std::endl;
+        return;
+    }
 
     switch(perfItemWidetPtr->getPlotType()){
     case PlotType::CPU : ui->stackedWidget->setCurrentIndex(0); break;
@@ -197,7 +225,7 @@ void LTM::on_listWidget_itemClicked(QListWidgetItem *item){
     case PlotType::WIFI : ui->stackedWidget->setCurrentIndex(4); break;
     case PlotType::GPU : ui->stackedWidget->setCurrentIndex(5); break;
     }
-
+    std::cout << "[LTM::on_listWidget_itemClicked] done" << std::endl;
 
 }
 
@@ -283,10 +311,8 @@ void LTM::printInfo()
 void LTM::on_butUpdateOK_clicked()
 {
 
-
     on_listWidget_itemClicked(ui->listWidget->currentItem());
 }
-
 
 
 void LTM::handle_process_data()
@@ -396,7 +422,6 @@ void LTM::handle_process_data()
     }
 
 }
-
 
 
 void LTM::on_butKillProcess_clicked()
