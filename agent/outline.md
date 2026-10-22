@@ -12,7 +12,8 @@
 LikeTaskManager/
 ├── agent/                    # ← Agent working files (this folder)
 │   ├── progress.md           # Progress log & step tracking
-│   └── outline.md            # This file — repo map
+│   ├── outline.md            # This file — repo map
+│   └── gpu_research.md       # GPU integration research (pathways & tradeoffs, no code)
 │
 ├── main.cpp                  # Entry point — QApplication setup, loads qdarkstyle, shows LTM window
 ├── ltm.h / ltm.cpp           # Main window class (QMainWindow subclass) — orchestrates all widgets & readers
@@ -62,6 +63,7 @@ LikeTaskManager/
 ├── Jenkinsfile               # CI pipeline config (legacy qmake — superseded by GitHub Actions)
 ├── .github/workflows/
 │   └── build-appimage.yml    # GitHub Actions: Qt6 + Qwt + libnethogs build → AppImage + smoke test + artifact
+│                              #   + release job: publishes AppImage as GitHub Release (on tag v* / manual dispatch)
 ├── LikeTaskManager.desktop   # Desktop entry (required by linuxdeployqt for AppImage bundling)
 │
 │── ── Misc ──
@@ -157,7 +159,16 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 
 ## GitHub Actions AppImage Build (ADDED 2026-10-19, CI ITERATION 2026-10-19)
 
-`.github/workflows/build-appimage.yml` — runs on `ubuntu-22.04` **without a container** (runner image glibc 2.35 is the max linuxdeployqt supports): install deps → build Qwt 6.3.0 (SourceForge tarball, `qmake6`, OpenGL disabled via `sed` on `qwtconfig.pri`) → build libnethogs **v0.8.8** from **`raboof/nethogs`** (meson, `.so` copied from build tree, SONAME fixed via patchelf, compat symlinks) → CMake build → ctest → AppDir + linuxdeployqt-continuous → smoke test under `xvfb-run` → upload AppImage artifact. Triggers on push/PR to `qt6`/`Qt6Cmake` + manual dispatch. Local AppImage build is not possible in the dev container (no FUSE, glibc 2.41).
+`.github/workflows/build-appimage.yml` — runs on `ubuntu-22.04` **without a container** (runner image glibc 2.35 is the max linuxdeployqt supports): install deps → build Qwt 6.3.0 (SourceForge tarball, `qmake6`, OpenGL disabled via `sed` on `qwtconfig.pri`) → build libnethogs **v0.8.8** from **`raboof/nethogs`** (meson, `.so` copied from build tree, SONAME fixed via patchelf, compat symlinks) → CMake build → ctest → AppDir + linuxdeployqt-continuous → smoke test under `xvfb-run` → upload AppImage artifact. Triggers on push/PR to `qt6`/`Qt6Cmake`, tag `v*`, + manual dispatch. Local AppImage build is not possible in the dev container (no FUSE, glibc 2.41).
+
+### GitHub Release Job (ADDED 2026-10-22)
+- New `release` job (`needs: build-appimage`) publishes the AppImage as a **GitHub Release**
+  (artifacts from the build job expire after 90 days and can't be attached to releases from the UI).
+- Runs only on tag pushes (`refs/tags/v*`) or manual dispatch — not on every push/PR.
+- Steps: `actions/download-artifact@v4` (downloads `LikeTaskManager-x86_64.AppImage`) →
+  `softprops/action-gh-release@v2` with `generate_release_notes: true` (creates/updates the release and attaches the AppImage).
+- `permissions: contents: write` added at workflow level (required for creating releases).
+- **How to release:** `git tag v1.0.0 && git push origin v1.0.0` → workflow builds + creates release `v1.0.0` with the AppImage asset.
 
 ### CI Fix History (8 pushes to `Qt6Cmake`)
 | Commit | Fix |

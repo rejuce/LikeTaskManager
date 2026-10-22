@@ -1,5 +1,34 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## 2026-10-22
+
+### Step: GitHub Release Publishing (workflow)
+- [x] Added `release` job to `.github/workflows/build-appimage.yml`
+  - `needs: build-appimage`, gated by `if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'`
+  - Downloads `LikeTaskManager-x86_64.AppImage` artifact → `softprops/action-gh-release@v2` publishes it as a release asset (`generate_release_notes: true`)
+  - Added `permissions: contents: write` and `tags: [ 'v*' ]` trigger
+- [x] YAML validated (python yaml.safe_load)
+- **How to create a release:** commit + push, then `git tag v1.0.0 && git push origin v1.0.0`
+- **NOT committed/pushed yet — awaiting user approval.**
+- Updated `agent/outline.md` with release-job docs.
+
+## 2026-07-14
+
+### Step: GPU Integration — Research (NO IMPLEMENTATION)
+- [x] Researched Linux GPU utilisation / VRAM collection pathways
+- [x] Wrote findings to `agent/gpu_research.md`
+- Key findings:
+  - **AMD**: pure sysfs under `/sys/class/drm/cardN/device/` — `gfx_busy_percent` (0-100),
+    `mem_info_vram_total` / `mem_info_vram_used` (bytes). No external lib. Fits `StatReader` pattern directly.
+  - **NVIDIA**: NVML C API via `libnvidia-ml.so` (dlopen, like libnethogs) — `nvmlDeviceUtilizationRates()`
+    (gpu + memory %), `nvmlDeviceGetMemoryInfo()` (total/used/free bytes).
+  - **Intel**: no first-class user-space utilisation API → out of scope.
+  - **Rejected**: shelling out to `nvidia-smi`/`amd-smi` (spawn cost, fragile parsing); AMDGPU
+    `gpu_metrics` binary (overkill at 100ms sampling).
+  - **Recommendation**: `GpuStatReader : StatReader<GpuData>` with vendor auto-detect
+    (sysfs scan for AMD, dlopen for NVML), per-card util% + VRAM used/total. RAM reader is the closest analog.
+- Open questions for user: dev/test GPU vendor? single vs multi-GPU UI? include temp/power in v1?
+
 ## 2025-07-14
 
 ### Step 1: Repository Setup
