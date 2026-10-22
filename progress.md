@@ -1,5 +1,19 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: master — bring AppImage workflow to parity + fix `zsync MakeSyncFile` (exit 3)
+- Reset local `master` to `origin/master` (`490fb83`) and committed directly there.
+- **Root cause of CI failure:** modern `zsync` (0.8.x on ubuntu-22.04) removed the
+  `MakeSyncFile` subcommand → `Usage: zsync http://...` exit 3. Use `zsync --make-sync-file <file>`.
+- **Also ported from Qt6Cmake into the master workflow:**
+  - `zsync` added to the apt dependency list
+  - fixed AppImage name `LikeTaskManager-x86_64.AppImage` (guarded `mv` against
+    "are the same file")
+  - `-updateinformation` zsync URL (autoupdate from latest GitHub Release)
+  - `Create .zsync file` step with `zsync --make-sync-file`
+  - `.zsync` artifact upload
+- Change only in `.github/workflows/build-appimage.yml`. YAML validated.
+- **Committed & pushed to `origin/master`** (via SSH key `/workspace/repos/keys/github`).
+
 ## Current Focus: Debugging Segfault on Lubuntu 24.04 (headless/VNC)
 
 ### Status: Segfault root cause identified and fixed

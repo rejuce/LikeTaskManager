@@ -24,7 +24,7 @@ jobs:
             build-essential cmake ninja-build meson make \
             libgl-dev \
             git curl wget unzip xz-utils file patchelf libfuse2 \
-            desktop-file-utils xvfb \
+            desktop-file-utils xvfb zsync \
             qt6-base-dev qt6-base-dev-tools qt6-l10n-tools \
             libqt6network6 libqt6widgets6 libqt6svg6-dev \
             libpcap-dev libnl-3-dev libnl-genl-3-dev
@@ -123,9 +123,24 @@ jobs:
       - name: Bundle AppImage
         run: |
           ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
-            -appimage -bundle-non-qt-libs -verbose=2
-          ls -lh LikeTaskManager-*.AppImage
-          chmod +x LikeTaskManager-*.AppImage
+            -appimage -bundle-non-qt-libs -verbose=2 \
+            -updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"
+          # linuxdeployqt derives the file name from the build version (commit SHA
+          # with actions/checkout without fetch-depth:0), so it may differ on every
+          # build. Rename to a fixed name so the release asset URL never changes.
+          # Guard the mv: if linuxdeployqt already produced the target name, 'mv' fails
+          # with "are the same file" (exit 1).
+          if [ ! -e LikeTaskManager-x86_64.AppImage ]; then
+            mv LikeTaskManager-*.AppImage LikeTaskManager-x86_64.AppImage
+          fi
+          ls -lh LikeTaskManager-x86_64.AppImage
+          chmod +x LikeTaskManager-x86_64.AppImage
+
+      - name: Create .zsync file (for AppImage autoupdate)
+        run: |
+          # modern zsync uses --make-sync-file (subcommand 'MakeSyncFile' was removed)
+          zsync --make-sync-file LikeTaskManager-x86_64.AppImage
+          ls -lh LikeTaskManager-x86_64.AppImage.zsync
 
       # ------------------------------------------------------------------
       # Smoke test: run the AppImage headless on a virtual display and
@@ -135,7 +150,7 @@ jobs:
         run: |
           # GitHub Actions runners lack FUSE, so AppImages can't self-extract.
           # Use --appimage-extract to unpack, then run AppRun directly.
-          APPIMAGE=$(ls LikeTaskManager-*.AppImage)
+          APPIMAGE=LikeTaskManager-x86_64.AppImage
           chmod +x "$APPIMAGE"
           ./$APPIMAGE --appimage-extract
           xvfb-run -a -s "-screen 0 1024x768x24" timeout 20 ./squashfs-root/AppRun &
@@ -153,5 +168,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LikeTaskManager-x86_64.AppImage
-          path: LikeTaskManager-*.AppImage
+          path: LikeTaskManager-x86_64.AppImage
+          if-no-files-found: error
+
+      - name: Upload .zsync artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LikeTaskManager-x86_64.AppImage.zsync
+          path: LikeTaskManager-x86_64.AppImage.zsync
           if-no-files-found: error
