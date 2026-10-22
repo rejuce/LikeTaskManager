@@ -2,10 +2,10 @@ name: Build AppImage
 
 on:
   push:
-    branches: [ qt6, Qt6Cmake ]
+    branches: [ master, Qt6Cmake ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ qt6, Qt6Cmake ]
+    branches: [ master, Qt6Cmake ]
   workflow_dispatch:
 
 permissions:
