@@ -1,5 +1,16 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: CI fix — `mv: ... are the same file` (exit 1)
+- **Symptom:** GitHub Actions "Bundle AppImage" step failed with
+  `mv: 'LikeTaskManager-x86_64.AppImage' and 'LikeTaskManager-x86_64.AppImage' are the same file` (exit 1).
+- **Root cause:** linuxdeployqt sometimes already emits the target name
+  `LikeTaskManager-x86_64.AppImage` (when the derived version string happens to
+  match), so the unconditional `mv LikeTaskManager-*.AppImage LikeTaskManager-x86_64.AppImage`
+  renamed the file onto itself and failed.
+- **Fix:** Guarded the rename in `.github/workflows/build-appimage.yml`:
+  `mv` only runs if `LikeTaskManager-x86_64.AppImage` does not already exist.
+- **Validation:** YAML parses cleanly (python yaml.safe_load). Not committed (awaiting approval).
+
 ## 2026-10-22: Fixed AppImage name + .zsync autoupdate (CI workflow)
 - AppImage file name is now constant: `LikeTaskManager-x86_64.AppImage` (renamed after bundling;
   linuxdeployqt used to embed the commit SHA via the project VERSION).

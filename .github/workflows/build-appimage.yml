@@ -130,9 +130,13 @@ jobs:
             -appimage -bundle-non-qt-libs -verbose=2 \
             -updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"
           # linuxdeployqt derives the file name from the build version (commit SHA
-          # with actions/checkout without fetch-depth:0), so it would differ on every
+          # with actions/checkout without fetch-depth:0), so it may differ on every
           # build. Rename to a fixed name so the release asset URL never changes.
-          mv LikeTaskManager-*.AppImage LikeTaskManager-x86_64.AppImage
+          # Guard the mv: if linuxdeployqt already produced the target name, 'mv' fails
+          # with "are the same file" (exit 1).
+          if [ ! -e LikeTaskManager-x86_64.AppImage ]; then
+            mv LikeTaskManager-*.AppImage LikeTaskManager-x86_64.AppImage
+          fi
           ls -lh LikeTaskManager-x86_64.AppImage
           chmod +x LikeTaskManager-x86_64.AppImage
 
