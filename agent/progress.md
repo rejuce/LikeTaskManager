@@ -1,5 +1,34 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## Issue #12 — group the same app processes (IMPLEMENTED 2026-10-22)
+- **Goal:** collapse multiple processes with the same executable name into one row
+  (summed CPU/mem/disk/net + process count), with expandable per-PID children.
+- **Chosen approach:** QTreeWidget (replaces QTableWidget `tableWProcess`)
+- **Branch:** `qtree-process-view`
+
+### Implementation (DONE)
+- [x] `processgroup.h/.cpp` — `ProcessGroup` struct + `aggregate_processes()` helper
+- [x] `ltm.ui` — replaced `tableWProcess` (QTableWidget) with `treeWProcess` (QTreeWidget), 7 columns
+- [x] `ltm.h/.cpp` — `handle_process_data()` builds/updates group+child items in place;
+  `on_butKillProcess_clicked()` kills group PIDs (with confirm) or single PID;
+  Expand All / Collapse All buttons at bottom
+- [x] `tests/t_processgroup.cpp` — unit tests for `aggregate_processes()`
+- [x] `CMakeLists.txt` — added `processgroup.cpp` to app target + test lib
+- [x] **Build verified:** CMake + Ninja build succeeds
+- [x] **Visual verified on Xvfb:** screenshots captured showing grouped rows
+  - `screenshot_processes_collapsed.png` — collapsed groups (e.g. "sh: 2")
+  - `screenshot_processes_grouped.png` — groups with counts (e.g. "sleep: 5", "sh: 2")
+
+### TODO
+- [ ] Run full `ctest` to confirm all test suites (including new `t_processgroup`) pass
+- [ ] Review and commit (pending user approval)
+- [ ] Consider: auto-refresh should preserve expansion state (verify on real system)
+- [ ] Consider: Kill Process button on expanded child kills only that PID (verify)
+
+### Screenshots (in repo root, untracked)
+- `screenshot_processes_collapsed.png` — Processes tab, groups collapsed
+- `screenshot_processes_grouped.png` — Processes tab, showing "sleep: 5" and "sh: 2" groups
+
 ## 2025-07-14
 
 ### Step 1: Repository Setup

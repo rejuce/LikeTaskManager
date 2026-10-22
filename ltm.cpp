@@ -9,6 +9,10 @@
 #include <QVector>
 #include "cpustatreader.h"
 #include "processstatreader.h"
+#include "processgroup.h"
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QHash>
 #include <qwt_scale_engine.h>
 #include "ramitemwidget.h"
 #include <QProcess>
@@ -315,105 +319,116 @@ void LTM::on_butUpdateOK_clicked()
 }
 
 
+// Update one tree item in place: keep the existing item (and its children),
+// only refresh the displayed values. Returns the (possibly new) item.
+static QTreeWidgetItem* set_process_item_values(QTreeWidgetItem* item,
+                                               const QString& firstColumn,
+                                               const QString& user,
+                                               const QString& cpu,
+                                               const QString& memory,
+                                               const QString& disk,
+                                               const QString& net,
+                                               const QString& name,
+                                               const QString& rawCpu,
+                                               const QString& rawMemory,
+                                               const QString& rawDisk,
+                                               const QString& rawNet)
+{
+    item->setText(0, firstColumn);
+    item->setText(1, user);
+    item->setText(2, cpu);
+    item->setText(3, memory);
+    item->setText(4, disk);
+    item->setText(5, net);
+    item->setText(6, name);
+    // raw numbers in UserRole so sortingEnabled() sorts numerically, not lexicographically
+    item->setData(2, Qt::UserRole, rawCpu);
+    item->setData(3, Qt::UserRole, rawMemory);
+    item->setData(4, Qt::UserRole, rawDisk);
+    item->setData(5, Qt::UserRole, rawNet);
+    return item;
+}
+
 void LTM::handle_process_data()
 {
     try{
 
     auto& dataVec = m_ProcessStatReaderT.m_DataVec;
 
-    QItemSelectionModel *select = ui->tableWProcess->selectionModel();
-    //int curSelectedRow = select->selectedRows().first().row();
-
-    int currentSelectedPID = 0;
-
-    if(select->selectedRows().size()>0){
-        int curSelectedRow= select->selectedRows().first().row();
-        currentSelectedPID = ui->tableWProcess->item(curSelectedRow,0)->data(Qt::DisplayRole).toInt();
-    }
-    else  {
-        currentSelectedPID =-1;
+    // remember which groups were expanded so we can restore them after rebuild
+    QSet<QString> expandedGroups;
+    for(int r=0; r<ui->treeWProcess->topLevelItemCount(); r++){
+        if(ui->treeWProcess->topLevelItem(r)->isExpanded())
+            expandedGroups.insert(ui->treeWProcess->topLevelItem(r)->data(0, Qt::UserRole).toString());
     }
 
+    QVector<StatTypes::ProcessGroup> groups;
+    QHash<int, const StatTypes::ProcessData*> pidLookup;
+    {
+        std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
+        groups = aggregate_processes(dataVec);
+        for(const auto& rec : dataVec) pidLookup.insert(rec.pid, &rec);
+    }
 
+    ui->treeWProcess->setUpdatesEnabled(false);
+    ui->treeWProcess->setSortingEnabled(false);
+    ui->treeWProcess->clear(); // remove all items
 
-    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
+    for(const auto& group : groups){
+        QTreeWidgetItem* item = new QTreeWidgetItem();
+        item->setData(0, Qt::UserRole, group.name); // stable key: group name
 
+        set_process_item_values(item,
+            QString::number(group.pids.size()),
+            group.user,
+            QString::number(group.totalCpuPct*100, 'f', 1) + "%",
+            QString::number(group.totalMemKiB/1024.0, 'f', 1) + " MiB",
+            QString::number(group.totalDiskKiBs/1024.0, 'f', 1) + " MiB/s",
+            m_ProcessStatReaderT.noRootPriv ? QString("need root")
+                                            : QString::number(group.totalNetKiBs/1024.0, 'f', 1) + " MiB/s",
+            group.displayName,
+            QString::number(group.totalCpuPct*100),
+            QString::number(group.totalMemKiB/1024.0),
+            QString::number(group.totalDiskKiBs/1024.0),
+            QString::number(group.totalNetKiBs/1024.0));
 
-    ui->tableWProcess->setRowCount(dataVec.size());
-//must be a better way than rewriting the table...
+        // per-PID child rows
+        for(int pid : group.pids){
+            auto it = pidLookup.find(pid);
+            if(it == pidLookup.end()) continue;
+            const auto& proc = *it.value();
 
-    ui->tableWProcess->setSortingEnabled(false);
-    //ui->tableWProcess->clear();
+            QTreeWidgetItem* child = new QTreeWidgetItem();
+            child->setData(0, Qt::UserRole, pid); // stable key: pid
 
-    constexpr int colums = 7;
-    for(int pr=0; pr<dataVec.size();pr++){
-        if(ui->tableWProcess->item(pr,0)==nullptr) {//does not exist yet -> create whole line
-            for(int k=0; k<colums; k++){
-                QTableWidgetItem *newItem = new QTableWidgetItem();
-                ui->tableWProcess->setItem(pr, k, newItem);
-                ui->tableWProcess->item(pr,k)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
-            }
+            set_process_item_values(child,
+                QString::number(pid),
+                proc.user,
+                QString::number(proc.currentCPUPct*100, 'f', 1) + "%",
+                QString::number(proc.currentMemKiB/1024.0, 'f', 1) + " MiB",
+                QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0, 'f', 1) + " MiB/s",
+                m_ProcessStatReaderT.noRootPriv ? QString("need root")
+                                                : QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0, 'f', 1) + " MiB/s",
+                proc.name,
+                QString::number(proc.currentCPUPct*100),
+                QString::number(proc.currentMemKiB/1024.0),
+                QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0),
+                QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0));
 
-
+            item->addChild(child);
         }
 
+        // restore expand state
+        if(expandedGroups.contains(group.name))
+            item->setExpanded(true);
 
-        ui->tableWProcess->item(pr,0)->setData(Qt::DisplayRole,dataVec[pr].pid);
-        ui->tableWProcess->setColumnWidth(0,60);
-
-        ui->tableWProcess->item(pr,1)->setData(Qt::DisplayRole,dataVec[pr].user);
-        ui->tableWProcess->setColumnWidth(1,80);
-
-        ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,dataVec[pr].currentCPUPct );
-        //  ui->tableWProcess->item(pr,2)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
-        ui->tableWProcess->setColumnWidth(2,70);
-
-        //    ui->tableWProcess->item(pr,3)->setTextAlignment(Qt::AlignVCenter | Qt::AlignRight);
-        ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,dataVec[pr].currentMemKiB/1024);
-        ui->tableWProcess->setColumnWidth(3,100);
-
-
-
-        ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,(dataVec[pr].currentReadKiBsDiskData+dataVec[pr].currentWriteKiBsDiskData)/1024);
-        ui->tableWProcess->setColumnWidth(4,100);
-        ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,(dataVec[pr].currentReadKiBsNetData+dataVec[pr].currentWriteKiBsNetData)/1024);
-        ui->tableWProcess->setColumnWidth(5,100);
-
-        ui->tableWProcess->item(pr,6)->setData(Qt::DisplayRole,dataVec[pr].name);
-        ui->tableWProcess->setColumnWidth(6,150);
-
-
-
-
+        ui->treeWProcess->addTopLevelItem(item);
     }
 
-
-    ui->tableWProcess->setSortingEnabled(true); //quickly sort it
-
-    ui->tableWProcess->setSortingEnabled(false); //disable sorting again and adjust cell formants
-    ui->tableWProcess->horizontalHeader()->setSortIndicatorShown(true);
-
-
-    for(int pr=0; pr<dataVec.size();pr++){
-        //fix selection
-        if(ui->tableWProcess->item(pr,0)->data(Qt::DisplayRole).toInt()==currentSelectedPID){
-            //select row again
-            ui->tableWProcess->selectRow(pr);
-            //select->row
-        }
-
-        ui->tableWProcess->item(pr,3)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,3)->data(Qt::DisplayRole).toFloat(),'f',1) + " MiB");
-        ui->tableWProcess->item(pr,2)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,2)->data(Qt::DisplayRole).toFloat()*100,'f',1) + QString("%"));
-        ui->tableWProcess->item(pr,4)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,4)->data(Qt::DisplayRole).toFloat(),'f',1) + QString(" MiB/s"));
-
-        if(!m_ProcessStatReaderT.noRootPriv)
-            ui->tableWProcess->item(pr,5)->setData(Qt::DisplayRole,QString::number(ui->tableWProcess->item(pr,5)->data(Qt::DisplayRole).toFloat(),'f',1) + QString(" MiB/s"));
-        else ui->tableWProcess->item(pr,5)->setText("need root");
-
-    }
-
-   // throw std::runtime_error("test process aseembling exception");
-
+    ui->treeWProcess->setSortingEnabled(true); //quickly sort it
+    ui->treeWProcess->setSortingEnabled(false); //disable sorting again
+    ui->treeWProcess->header()->setSortIndicatorShown(true);
+    ui->treeWProcess->setUpdatesEnabled(true);
 
     } catch (std::exception& e) {
         qDebug() << "execption when assembling process data: " << e.what();
@@ -423,13 +438,38 @@ void LTM::handle_process_data()
 
 }
 
+void LTM::on_butExpandAllProcesses_clicked()
+{
+    for(int r=0; r<ui->treeWProcess->topLevelItemCount(); r++)
+        ui->treeWProcess->topLevelItem(r)->setExpanded(true);
+}
+
+void LTM::on_butCollapseAllProcesses_clicked()
+{
+    for(int r=0; r<ui->treeWProcess->topLevelItemCount(); r++)
+        ui->treeWProcess->topLevelItem(r)->setExpanded(false);
+}
+
 
 void LTM::on_butKillProcess_clicked()
 {
-    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex); //jsut to be sure not to get current selcted item while table is being rebuilt
+    std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex); //just to be sure not to get current selcted item while table is being rebuilt
 
-     QString terminateID = ui->tableWProcess->selectedItems()[0]->data(Qt::DisplayRole).toString();
-     system((std::string("kill -9 ")+ terminateID.toStdString()).c_str());
+    QTreeWidgetItem* sel = ui->treeWProcess->currentItem();
+    if(sel == nullptr) return;
+
+    // collect the pids belonging to the selection: a group (top level) or a single pid (child)
+    QVector<int> pids;
+    if(sel->parent() == nullptr){
+        for(int c=0; c<sel->childCount(); c++)
+            pids.push_back(sel->child(c)->data(0, Qt::UserRole).toInt());
+    } else {
+        pids.push_back(sel->data(0, Qt::UserRole).toInt());
+    }
+    if(pids.isEmpty()) return;
+
+    for(int pid : pids)
+        system((std::string("kill -9 ") + QString::number(pid).toStdString()).c_str());
 }
 
 void LTM::load_services() {

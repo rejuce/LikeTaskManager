@@ -11,6 +11,7 @@ add_library(ltm_testlib STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/../diskstatreader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../networkstatreader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../processstatreader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../processgroup.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../perfitemwidget.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../cpuitemwidget.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../ramitemwidget.cpp
