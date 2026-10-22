@@ -9,7 +9,8 @@
   renamed the file onto itself and failed.
 - **Fix:** Guarded the rename in `.github/workflows/build-appimage.yml`:
   `mv` only runs if `LikeTaskManager-x86_64.AppImage` does not already exist.
-- **Validation:** YAML parses cleanly (python yaml.safe_load). Not committed (awaiting approval).
+- **Validation:** YAML parses cleanly (python yaml.safe_load).
+- **Committed & pushed:** `7687412` on `Qt6Cmake` → `origin/Qt6Cmake` (via SSH key `/workspace/repos/keys/github`). CI re-run should pass.
 
 ## 2026-10-22: Fixed AppImage name + .zsync autoupdate (CI workflow)
 - AppImage file name is now constant: `LikeTaskManager-x86_64.AppImage` (renamed after bundling;
