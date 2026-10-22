@@ -37,6 +37,7 @@ LikeTaskManager/
 ├── perfitemwidget.h/.cpp     # Performance item widget (process tab item)
 │
 │── ── Tab-specific pages (QStackedWidget pages) ──
+├── processsorttree.h/.cpp    # ProcessSortTree (QTreeWidget subclass) — manual numeric column sort
 ├── ltm_cpu.cpp               # CPU tab page logic
 ├── ltm_ram.cpp               # RAM tab page logic
 ├── ltm_disk.cpp              # Disk tab page logic
@@ -112,7 +113,8 @@ ItemWidgets (QwtPlot curves) + static labels
 | `DiskItemWidget` | `diskitemwidget.h/.cpp` | Disk tab UI: per-disk read/write rate, IOPS, QwtPlot. |
 | `NetworkItemWidget` | `networkitemwidget.h/.cpp` | Network tab UI: per-iface tx/rx, link speed, QwtPlot. |
 | `PerfItemWidget` | `perfitemwidget.h/.cpp` | Process list item widget. |
-| **Process tab (QTreeWidget)** | `ltm.cpp` `handle_process_data()` | Groups by name, expandable per-PID children. Kill button kills group or single PID. |
+| **Process tab (QTreeWidget)** | `ltm.cpp` `handle_process_data()` | Groups by name, expandable per-PID children. Kill button kills group or single PID. Items updated in-place (no clear+rebuild). |
+| `ProcessSortTree` | `processsorttree.h/.cpp` | QTreeWidget subclass with manual numeric column sort. Built-in sort always disabled; `std::stable_sort` on `UserRole` doubles. Header clicks via `sectionPressed`. `applyNumericSort()` called each update cycle. |
 
 ### Qt Modules Used
 - `core`, `gui`, `widgets`, `network`, `test` (Qt6::Core/Gui/Widgets/Network/Test)
@@ -190,9 +192,9 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 - **Remote:** `origin` → `github.com:rejuce/LikeTaskManager.git`
 - **Branches:** `master` (Qt5 legacy), `Qt5-final`, `qt6` (base), `Qt6Cmake` (working), `qtree-process-view` (Issue #12)
 
-## Issue #12 — Process Grouping (Branch: `qtree-process-view`)
-- **Status:** Implemented, visually verified on Xvfb. Pending: full ctest + commit.
-- **New files:** `processgroup.h`, `processgroup.cpp`, `tests/t_processgroup.cpp`
+## Issue #12 — Process Grouping (Branch: `qtree-process-view` → merged to `master`)
+- **Status:** Implemented, visually verified on Xvfb. All 8 tests pass. Pending: commit & push.
+- **New files:** `processgroup.h`, `processgroup.cpp`, `processsorttree.h`, `processsorttree.cpp`, `tests/t_processgroup.cpp`
 - **Modified:** `ltm.h`, `ltm.cpp`, `ltm.ui` (QTableWidget → QTreeWidget), `CMakeLists.txt`, `tests/CMakeLists.txt`
 - **Screenshots:** `screenshot_processes_collapsed.png`, `screenshot_processes_grouped.png` (repo root, untracked)
 - **SSH key:** `/workspace/repos/keys/github`

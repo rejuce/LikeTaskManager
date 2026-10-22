@@ -1,5 +1,29 @@
 # LikeTaskManager — Progress
 
+## 2026-10-22: QTreeWidget fixes — numeric column sort + preserve expansion state (Bug A & B)
+
+**Objective:** Fix two bugs in the Processes tab `QTreeWidget`:
+- **Bug A:** Column header sorting used lexicographic (string) order instead of numeric order.
+- **Bug B:** Tree expansion state was lost on every 100 ms data update (clear+rebuild).
+
+**Solution:**
+- **New files:** `processsorttree.h`, `processsorttree.cpp` — `ProcessSortTree` (QTreeWidget subclass)
+  - Built-in sorting is **always disabled** (`setSortingEnabled(false)`) to prevent lexicographic re-sorts.
+  - Header clicks handled via `QHeaderView::sectionPressed` (works with sorting disabled).
+  - Manual numeric sort using `std::stable_sort` with a comparator that reads `Qt::UserRole` data via `toDouble(&ok)`, falling back to string comparison.
+  - `applyNumericSort()` called at end of every `handle_process_data()` cycle.
+  - Reordering uses `takeTopLevelItem(0)` / `addTopLevelItem(item)` with sorting disabled — preserves item identity and child expansion.
+- **Modified files:**
+  - `ltm.cpp` — Removed `setSortingEnabled(true)`; `handle_process_data()` updates items **in-place** (no delete/recreate); calls `ui->treeWProcess->applyNumericSort()` before re-enabling updates.
+  - `CMakeLists.txt` — Added `processsorttree.cpp` / `processsorttree.h`.
+
+**Verification:**
+- All 8 unit tests pass (`ctest`)
+- Release build succeeds (CMake + Ninja)
+- Xvfb verification: Bug B fixed (tree stays expanded across 30+ update ticks)
+- Xvfb verification: Bug A fixed (debug output confirms correct numeric before/after ordering; sort indicator moves on header click)
+- **Status:** Complete. Pending: commit & push to `master`.
+
 ## 2026-10-22: Tagged v4.0.2 + added tag trigger & release job to master workflow
 - Latest master build tagged **v4.0.2** (annotated). `v4.0.1` kept as-is on old
   Qt6Cmake commit `a0f0b90` (per decision; no v4.0.1 GitHub Release existed).

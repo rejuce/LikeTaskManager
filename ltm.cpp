@@ -41,6 +41,8 @@ LTM::LTM(QWidget *parent)
 
     connect(ui->actionUpdate,&QAction::triggered,this, &LTM::selfUpdate);
     connect(ui->actionInfo,&QAction::triggered,this, &LTM::printInfo);
+
+    // ProcessSortTree handles its own sorting setup in its constructor
     std::cout << "[LTM ctor] actions connected" << std::endl;
 
 
@@ -351,91 +353,115 @@ static QTreeWidgetItem* set_process_item_values(QTreeWidgetItem* item,
 
 void LTM::handle_process_data()
 {
-    try{
+    try {
+        auto& dataVec = m_ProcessStatReaderT.m_DataVec;
 
-    auto& dataVec = m_ProcessStatReaderT.m_DataVec;
-
-    // remember which groups were expanded so we can restore them after rebuild
-    QSet<QString> expandedGroups;
-    for(int r=0; r<ui->treeWProcess->topLevelItemCount(); r++){
-        if(ui->treeWProcess->topLevelItem(r)->isExpanded())
-            expandedGroups.insert(ui->treeWProcess->topLevelItem(r)->data(0, Qt::UserRole).toString());
-    }
-
-    QVector<StatTypes::ProcessGroup> groups;
-    QHash<int, const StatTypes::ProcessData*> pidLookup;
-    {
-        std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
-        groups = aggregate_processes(dataVec);
-        for(const auto& rec : dataVec) pidLookup.insert(rec.pid, &rec);
-    }
-
-    ui->treeWProcess->setUpdatesEnabled(false);
-    ui->treeWProcess->setSortingEnabled(false);
-    ui->treeWProcess->clear(); // remove all items
-
-    for(const auto& group : groups){
-        QTreeWidgetItem* item = new QTreeWidgetItem();
-        item->setData(0, Qt::UserRole, group.name); // stable key: group name
-
-        set_process_item_values(item,
-            QString::number(group.pids.size()),
-            group.user,
-            QString::number(group.totalCpuPct*100, 'f', 1) + "%",
-            QString::number(group.totalMemKiB/1024.0, 'f', 1) + " MiB",
-            QString::number(group.totalDiskKiBs/1024.0, 'f', 1) + " MiB/s",
-            m_ProcessStatReaderT.noRootPriv ? QString("need root")
-                                            : QString::number(group.totalNetKiBs/1024.0, 'f', 1) + " MiB/s",
-            group.displayName,
-            QString::number(group.totalCpuPct*100),
-            QString::number(group.totalMemKiB/1024.0),
-            QString::number(group.totalDiskKiBs/1024.0),
-            QString::number(group.totalNetKiBs/1024.0));
-
-        // per-PID child rows
-        for(int pid : group.pids){
-            auto it = pidLookup.find(pid);
-            if(it == pidLookup.end()) continue;
-            const auto& proc = *it.value();
-
-            QTreeWidgetItem* child = new QTreeWidgetItem();
-            child->setData(0, Qt::UserRole, pid); // stable key: pid
-
-            set_process_item_values(child,
-                QString::number(pid),
-                proc.user,
-                QString::number(proc.currentCPUPct*100, 'f', 1) + "%",
-                QString::number(proc.currentMemKiB/1024.0, 'f', 1) + " MiB",
-                QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0, 'f', 1) + " MiB/s",
-                m_ProcessStatReaderT.noRootPriv ? QString("need root")
-                                                : QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0, 'f', 1) + " MiB/s",
-                proc.name,
-                QString::number(proc.currentCPUPct*100),
-                QString::number(proc.currentMemKiB/1024.0),
-                QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0),
-                QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0));
-
-            item->addChild(child);
+        QVector<StatTypes::ProcessGroup> groups;
+        QHash<int, const StatTypes::ProcessData*> pidLookup;
+        {
+            std::lock_guard<std::mutex> lck(m_ProcessStatReaderT.m_DataVecMutex);
+            groups = aggregate_processes(dataVec);
+            for (const auto& rec : dataVec) pidLookup.insert(rec.pid, &rec);
         }
 
-        // restore expand state
-        if(expandedGroups.contains(group.name))
-            item->setExpanded(true);
+        ui->treeWProcess->setUpdatesEnabled(false);
 
-        ui->treeWProcess->addTopLevelItem(item);
-    }
+        // Build a set of active group names for removing stale items
+        QSet<QString> activeGroupNames;
+        for (const auto& g : groups) activeGroupNames.insert(g.name);
 
-    ui->treeWProcess->setSortingEnabled(true); //quickly sort it
-    ui->treeWProcess->setSortingEnabled(false); //disable sorting again
-    ui->treeWProcess->header()->setSortIndicatorShown(true);
-    ui->treeWProcess->setUpdatesEnabled(true);
+        // Remove top-level items whose group no longer exists
+        for (int r = ui->treeWProcess->topLevelItemCount() - 1; r >= 0; r--) {
+            QTreeWidgetItem* item = ui->treeWProcess->topLevelItem(r);
+            if (!activeGroupNames.contains(item->data(0, Qt::UserRole).toString()))
+                delete item;
+        }
+
+        // Update or create each group in-place (preserves expansion state)
+        for (const auto& group : groups) {
+            QTreeWidgetItem* item = nullptr;
+            for (int r = 0; r < ui->treeWProcess->topLevelItemCount(); r++) {
+                if (ui->treeWProcess->topLevelItem(r)->data(0, Qt::UserRole).toString() == group.name) {
+                    item = ui->treeWProcess->topLevelItem(r);
+                    break;
+                }
+            }
+
+            if (!item) {
+                item = new QTreeWidgetItem();
+                item->setData(0, Qt::UserRole, group.name);
+                ui->treeWProcess->addTopLevelItem(item);
+            }
+
+            // Refresh group row values
+            set_process_item_values(item,
+                QString::number(group.pids.size()),
+                group.user,
+                QString::number(group.totalCpuPct*100, 'f', 1) + "%",
+                QString::number(group.totalMemKiB/1024.0, 'f', 1) + " MiB",
+                QString::number(group.totalDiskKiBs/1024.0, 'f', 1) + " MiB/s",
+                m_ProcessStatReaderT.noRootPriv ? QString("need root")
+                                                : QString::number(group.totalNetKiBs/1024.0, 'f', 1) + " MiB/s",
+                group.displayName,
+                QString::number(group.totalCpuPct*100),
+                QString::number(group.totalMemKiB/1024.0),
+                QString::number(group.totalDiskKiBs/1024.0),
+                QString::number(group.totalNetKiBs/1024.0));
+
+            // --- children: remove stale, update existing, add new ---
+            QSet<int> activePids;
+            for (int pid : group.pids) activePids.insert(pid);
+
+            for (int c = item->childCount() - 1; c >= 0; c--) {
+                int pid = item->child(c)->data(0, Qt::UserRole).toInt();
+                if (!activePids.contains(pid))
+                    delete item->child(c);
+            }
+
+            for (int pid : group.pids) {
+                auto it = pidLookup.find(pid);
+                if (it == pidLookup.end()) continue;
+                const auto& proc = *it.value();
+
+                QTreeWidgetItem* child = nullptr;
+                for (int c = 0; c < item->childCount(); c++) {
+                    if (item->child(c)->data(0, Qt::UserRole).toInt() == pid) {
+                        child = item->child(c);
+                        break;
+                    }
+                }
+                if (!child) {
+                    child = new QTreeWidgetItem();
+                    child->setData(0, Qt::UserRole, pid);
+                    item->addChild(child);
+                }
+
+                set_process_item_values(child,
+                    QString::number(pid),
+                    proc.user,
+                    QString::number(proc.currentCPUPct*100, 'f', 1) + "%",
+                    QString::number(proc.currentMemKiB/1024.0, 'f', 1) + " MiB",
+                    QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0, 'f', 1) + " MiB/s",
+                    m_ProcessStatReaderT.noRootPriv ? QString("need root")
+                                                    : QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0, 'f', 1) + " MiB/s",
+                    proc.name,
+                    QString::number(proc.currentCPUPct*100),
+                    QString::number(proc.currentMemKiB/1024.0),
+                    QString::number((proc.currentReadKiBsDiskData+proc.currentWriteKiBsDiskData)/1024.0),
+                    QString::number((proc.currentReadKiBsNetData+proc.currentWriteKiBsNetData)/1024.0));
+            }
+        }
+
+        // Apply numeric sort after updating values
+        ui->treeWProcess->applyNumericSort();
+
+        ui->treeWProcess->setUpdatesEnabled(true);
 
     } catch (std::exception& e) {
-        qDebug() << "execption when assembling process data: " << e.what();
-    } catch (...){
-        qDebug() << "unknown execption occured when assembling process data";
+        qDebug() << "exception when assembling process data: " << e.what();
+    } catch (...) {
+        qDebug() << "unknown exception occured when assembling process data";
     }
-
 }
 
 void LTM::on_butExpandAllProcesses_clicked()

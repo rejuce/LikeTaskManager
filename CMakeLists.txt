@@ -89,6 +89,8 @@ add_executable(${PROJECT_NAME}
     processstatreader.h
     processgroup.cpp
     processgroup.h
+    processsorttree.cpp
+    processsorttree.h
     perfitemwidget.cpp
     perfitemwidget.h
     StatReader.h
