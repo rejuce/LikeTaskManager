@@ -1,5 +1,34 @@
 # LikeTaskManager — Progress
 
+## 2026-10-23: Investigated "shady" embedded zsync update URL — no change needed
+
+**Objective:** User reported the zsync download URL used by the built-in
+autoupdate looked shady (long signed
+`release-assets.githubusercontent.com` URL with token params) and wanted to
+confirm the app autoupdates from the **latest** release.
+
+**Investigation (live checks against the real repo/release):
+- Embedded update URL in the AppImage is
+  `zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync`
+  (set via `-updateinformation` in `.github/workflows/build-appimage.yml`).
+- `releases/latest/download/...` resolves via HTTP 302 to the current release's
+  asset (verified: → `v4.0.3`, published 2026-10-22).
+- Fetched the live `.zsync` (97 365 bytes). Its metadata block contains
+  `Filename: LikeTaskManager-x86_64.AppImage` and **relative** `URL:
+  LikeTaskManager-x86_64.AppImage` — i.e. zsync2 resolves the AppImage URL
+  *relative to the .zsync location*, always the latest release asset.
+- The long signed URL in the log is GitHub's CDN: `releases/latest/download/*`
+  302-redirects to a **short-lived signed** blob-storage URL (skoid/sk t/ske/sig
+  = Azure storage SAS, valid ~1 h, `se=2026-10-23T10:02:48Z` ≈ 1 h after
+  request). Normal GitHub behavior, not a bug, nothing shady.
+- `zsync2: optimized ranges, old requests 11 → 4` = zsync2's range-request
+  optimization, expected.
+
+**Conclusion:** Autoupdate **does** pull from the latest release. Fixed asset
+name (`LikeTaskManager-x86_64.AppImage`, enforced by the `mv` guard in the
+workflow) + `releases/latest` alias = stable, always-current update URL.
+**No file changes required.**
+
 ## 2026-10-23: Fix AppImage built-in autoupdate — copy `appimageupdatetool` into AppDir (3rd attempt)
 
 **Objective:** CI run (post 2nd-fix) still failed: `appimageupdate not found in bundle`.
