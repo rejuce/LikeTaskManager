@@ -1,5 +1,20 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## 2026-10-23: AppImage autoupdate fix — 3rd attempt: copy into AppDir
+- **Bug:** CI still failed: `appimageupdate not found in bundle` even after URL fix.
+- **Root cause:** `probonopd/linuxdeploy` repo has **no `plugins/` directory** anymore —
+  the appimage plugin that auto-bundles `appimageupdate` is gone. The workflow
+  downloaded the AppImage to the workspace root but never copied it into the AppDir.
+  The app code (`ltm.cpp`) expects it at
+  `applicationDirPath() + "/appimageupdatetool-x86_64.AppImage"` = `usr/bin/` in the AppImage.
+- **Fix (`.github/workflows/build-appimage.yml`):**
+  - Download step: save as `appimageupdatetool-x86_64.AppImage` (exact name the app expects),
+    then `cp` into `AppDir/usr/bin/` + `chmod +x`.
+  - Bundle step: removed misleading "plugin auto-detection" comment.
+  - Verify step: check `squashfs-root/usr/bin/appimageupdatetool-x86_64.AppImage`
+    (was `squashfs-root/appimageupdate` — wrong name and path).
+- **Status:** Pending commit & push.
+
 ## 2026-10-23: AppImage autoupdate fix — 2nd attempt: dead download URL
 - **Bug:** CI failed: `ERROR: FAILED appimageupdate not found in bundle`.
 - **Root cause:** `probonopd/linuxdeploy-plugin-appimage` GitHub repo has been

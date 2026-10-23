@@ -181,6 +181,7 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 | `88afb77` | Smoke test: `--appimage-extract` + run `AppRun` (no FUSE on GH runners) |
 | `c7dfe26` | **Autoupdate fix (1st):** download `appimageupdatetool.AppImage` next to linuxdeployqt; verify step extracts AppImage and fails if `appimageupdate` is missing |
 | (pending) | **Autoupdate fix (2nd):** old `probonopd/linuxdeploy-plugin-appimage` repo deleted → 404. New URL: `AppImageCommunity/AppImageUpdate/releases/.../appimageupdatetool-x86_64.AppImage`. Added `curl -f` + size guard |
+| (pending) | **Autoupdate fix (3rd):** no plugin in linuxdeployqt (plugins/ dir removed from linuxdeploy repo). Manually `cp appimageupdatetool-x86_64.AppImage` into `AppDir/usr/bin/` (the path `ltm.cpp` expects). Verify step checks `squashfs-root/usr/bin/appimageupdatetool-x86_64.AppImage` |
 
 ### Build Environment (OpenTerminal container, Debian 13)
 - **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)

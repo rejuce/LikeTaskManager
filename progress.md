@@ -1,5 +1,29 @@
 # LikeTaskManager — Progress
 
+## 2026-10-23: Fix AppImage built-in autoupdate — copy `appimageupdatetool` into AppDir (3rd attempt)
+
+**Objective:** CI run (post 2nd-fix) still failed: `appimageupdate not found in bundle`.
+Even with the correct download URL, the tool was never placed where the app expects it.
+
+**Root cause:** The app code (`ltm.cpp` line 253/261) looks for
+`qApp->applicationDirPath() + "/appimageupdatetool-x86_64.AppImage"`
+which is `usr/bin/appimageupdatetool-x86_64.AppImage` inside the AppImage.
+The workflow downloaded the file to the workspace root but **never copied it
+into the AppDir**. There is no automatic bundling — the `probonopd/linuxdeploy`
+repo has had its entire `plugins/` directory removed, so no appimage plugin
+exists in the linuxdeployqt AppImage.
+
+**Fix (`.github/workflows/build-appimage.yml`):**
+- **Download step:** renamed output to `appimageupdatetool-x86_64.AppImage`
+  (the exact name the app code expects) and added
+  `cp appimageupdatetool-x86_64.AppImage AppDir/usr/bin/` + `chmod +x`.
+- **Bundle step:** removed the misleading comment about plugin auto-detection.
+- **Verify step:** now checks `squashfs-root/usr/bin/appimageupdatetool-x86_64.AppImage`
+  (was `squashfs-root/appimageupdate` — wrong name and path).
+
+**Validation:** YAML parsed OK.
+**Status:** Pending commit & push to `origin/master`.
+
 ## 2026-10-23: Fix AppImage built-in autoupdate — bundle `appimageupdate` (2nd attempt: dead URL fix)
 
 **Objective:** CI run failed with `ERROR: FAILED appimageupdate not found in bundle` —

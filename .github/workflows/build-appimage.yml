@@ -117,25 +117,29 @@ jobs:
           chmod +x linuxdeployqt.AppImage
 
       # ------------------------------------------------------------------
-      # appimageupdatetool — the linuxdeploy-plugin-appimage plugin that
-      # bundles the `appimageupdate` AppImage into the final AppImage.
-      # Without it, the built-in autoupdate of the produced AppImage fails
-      # with: ERROR: FAILED appimageupdate not packaged
+      # appimageupdatetool — the AppImageUpdate tool that the application's
+      # built-in autoupdate (ltm.cpp) invokes at runtime.  It must sit in
+      # AppDir/usr/bin/ with the exact name the code expects:
+      #   qApp->applicationDirPath() + "/appimageupdatetool-x86_64.AppImage"
+      # Without it the app shows: ERROR: FAILED appimageupdate not packaged
       # ------------------------------------------------------------------
       - name: Download appimageupdatetool
         run: |
-          # The old probonopd/linuxdeploy-plugin-appimage repo has been deleted.
-          # appimageupdatetool is now released from AppImageCommunity/AppImageUpdate.
-          curl -sfL -o appimageupdatetool.AppImage \
+          # Released from AppImageCommunity/AppImageUpdate (the old
+          # probonopd/linuxdeploy-plugin-appimage repo has been deleted).
+          curl -sfL -o appimageupdatetool-x86_64.AppImage \
             https://github.com/AppImageCommunity/AppImageUpdate/releases/download/continuous/appimageupdatetool-x86_64.AppImage
-          chmod +x appimageupdatetool.AppImage
+          chmod +x appimageupdatetool-x86_64.AppImage
           # Guard: ensure the download is a real AppImage (≥ 10 MB), not a 404 page.
-          SIZE=$(stat -c%s appimageupdatetool.AppImage 2>/dev/null || echo 0)
+          SIZE=$(stat -c%s appimageupdatetool-x86_64.AppImage 2>/dev/null || echo 0)
           if [ "$SIZE" -lt 10000000 ]; then
-            echo "::error::appimageupdatetool.AppImage is only ${SIZE} bytes — download likely failed"
+            echo "::error::appimageupdatetool-x86_64.AppImage is only ${SIZE} bytes — download likely failed"
             exit 1
           fi
-          echo "appimageupdatetool.AppImage downloaded: ${SIZE} bytes"
+          echo "appimageupdatetool-x86_64.AppImage downloaded: ${SIZE} bytes"
+          # Copy into the AppDir where the application expects it at runtime.
+          cp appimageupdatetool-x86_64.AppImage AppDir/usr/bin/appimageupdatetool-x86_64.AppImage
+          chmod +x AppDir/usr/bin/appimageupdatetool-x86_64.AppImage
 
       - name: Ensure qmake points to Qt6
         run: |
@@ -147,9 +151,6 @@ jobs:
 
       - name: Bundle AppImage
         run: |
-          # appimageupdatetool.AppImage must sit next to linuxdeployqt so the
-          # plugin is auto-detected; it bundles `appimageupdate` into the
-          # AppImage and reads the zsync URL from -updateinformation.
           ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
             -appimage -bundle-non-qt-libs -verbose=2 \
             -updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"
@@ -175,17 +176,17 @@ jobs:
           # only verify the file exists here.
           ls -lh LikeTaskManager-x86_64.AppImage.zsync
 
-      - name: Verify appimageupdate is bundled (for AppImage autoupdate)
+      - name: Verify appimageupdatetool is bundled (for AppImage autoupdate)
         run: |
-          # The built-in autoupdate fails with "ERROR: FAILED appimageupdate
-          # not packaged" if the appimageupdate AppImage is missing from the
-          # bundle. Extract and check for it.
+          # The built-in autoupdate (ltm.cpp) runs
+          #   applicationDirPath() + "/appimageupdatetool-x86_64.AppImage"
+          # which maps to usr/bin/ inside the AppImage.  Extract and check.
           ./LikeTaskManager-x86_64.AppImage --appimage-extract
-          if [ -x squashfs-root/appimageupdate ]; then
-            echo "appimageupdate is bundled - autoupdate will work"
+          if [ -x squashfs-root/usr/bin/appimageupdatetool-x86_64.AppImage ]; then
+            echo "appimageupdatetool-x86_64.AppImage is bundled - autoupdate will work"
           else
-            echo "::error::appimageupdate not found in bundle"
-            ls -la squashfs-root
+            echo "::error::appimageupdatetool-x86_64.AppImage not found in bundle"
+            ls -la squashfs-root/usr/bin/
             exit 1
           fi
 
