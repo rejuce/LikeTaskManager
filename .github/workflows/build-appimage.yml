@@ -116,6 +116,18 @@ jobs:
             https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x linuxdeployqt.AppImage
 
+      # ------------------------------------------------------------------
+      # appimageupdatetool — the linuxdeploy-plugin-appimage plugin that
+      # bundles the `appimageupdate` AppImage into the final AppImage.
+      # Without it, the built-in autoupdate of the produced AppImage fails
+      # with: ERROR: FAILED appimageupdate not packaged
+      # ------------------------------------------------------------------
+      - name: Download appimageupdatetool
+        run: |
+          curl -sL -o appimageupdatetool.AppImage \
+            https://github.com/probonopd/linuxdeploy-plugin-appimage/releases/download/continuous/appimageupdatetool-continuous-x86_64.AppImage
+          chmod +x appimageupdatetool.AppImage
+
       - name: Ensure qmake points to Qt6
         run: |
           # ubuntu-22.04 ships both Qt5 and Qt6; default 'qmake' is Qt5.
@@ -126,6 +138,9 @@ jobs:
 
       - name: Bundle AppImage
         run: |
+          # appimageupdatetool.AppImage must sit next to linuxdeployqt so the
+          # plugin is auto-detected; it bundles `appimageupdate` into the
+          # AppImage and reads the zsync URL from -updateinformation.
           ./linuxdeployqt.AppImage AppDir/usr/share/applications/LikeTaskManager.desktop \
             -appimage -bundle-non-qt-libs -verbose=2 \
             -updateinformation="zsync|https://github.com/rejuce/LikeTaskManager/releases/latest/download/LikeTaskManager-x86_64.AppImage.zsync"
@@ -150,6 +165,20 @@ jobs:
           # across distro versions (MakeSyncFile vs --make-sync-file), so we
           # only verify the file exists here.
           ls -lh LikeTaskManager-x86_64.AppImage.zsync
+
+      - name: Verify appimageupdate is bundled (for AppImage autoupdate)
+        run: |
+          # The built-in autoupdate fails with "ERROR: FAILED appimageupdate
+          # not packaged" if the appimageupdate AppImage is missing from the
+          # bundle. Extract and check for it.
+          ./LikeTaskManager-x86_64.AppImage --appimage-extract
+          if [ -x squashfs-root/appimageupdate ]; then
+            echo "appimageupdate is bundled - autoupdate will work"
+          else
+            echo "::error::appimageupdate not found in bundle"
+            ls -la squashfs-root
+            exit 1
+          fi
 
       # ------------------------------------------------------------------
       # Smoke test: run the AppImage headless on a virtual display and

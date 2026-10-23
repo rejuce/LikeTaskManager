@@ -1,5 +1,15 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## 2026-10-23: AppImage autoupdate fix — bundle `appimageupdate` in CI
+- **Bug:** AppImage built-in autoupdate failed: `ERROR: FAILED appimageupdate not packaged`.
+- **Root cause:** only `linuxdeployqt` was downloaded; the `appimageupdatetool`
+  plugin (which bundles `appimageupdate`) was missing next to it.
+- **Fix (`.github/workflows/build-appimage.yml`):** new step **Download
+  appimageupdatetool** (continuous x86_64 from linuxdeploy-plugin-appimage
+  releases); new step **Verify appimageupdate is bundled** (extracts AppImage,
+  fails build if `squashfs-root/appimageupdate` is absent).
+- **Verification:** YAML parses. Full check on next CI run. Not committed.
+
 ## 2026-10-23: Fix expansion state lost on every update tick
 - **Bug:** `takeTopLevelItem()` in `ProcessSortTree::sortByColumn()` collapses the item
   AND all descendants. Since `applyNumericSort()` runs every 100 ms, every group/PID

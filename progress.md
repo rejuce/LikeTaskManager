@@ -1,5 +1,27 @@
 # LikeTaskManager — Progress
 
+## 2026-10-23: Fix AppImage built-in autoupdate — bundle `appimageupdate` via linuxdeploy-plugin-appimage
+
+**Objective:** AppImage's built-in autoupdate failed at runtime with
+`ERROR: FAILED appimageupdate not packaged` because the bundle contained no
+`appimageupdate` AppImage.
+
+**Root cause:** The workflow downloaded only `linuxdeployqt`. The `appimageupdate`
+binary is bundled by the separate `linuxdeploy-plugin-appimage` plugin
+(`appimageupdatetool`), which linuxdeployqt auto-detects *only* when
+`appimageupdatetool.AppImage` sits next to it in the working directory.
+
+**Fix (`.github/workflows/build-appimage.yml` only):**
+- New step **Download appimageupdatetool** — fetches
+  `https://github.com/probonopd/linuxdeploy-plugin-appimage/releases/download/continuous/appimageupdatetool-continuous-x86_64.AppImage`
+  and `chmod +x` it, alongside the linuxdeployqt download.
+- New step **Verify appimageupdate is bundled** — extracts the finished AppImage
+  and fails the build if `squashfs-root/appimageupdate` is missing (guards
+  against regression of the exact reported error).
+
+**Validation:** YAML parsed OK (`python3 -c 'yaml.safe_load(...)'`).
+Full validation happens on the next CI run (push or tag). Not committed yet.
+
 ## 2026-10-23: Preserve tree expansion across update ticks (regression from Bug B fix)
 
 **Objective:** After the numeric-sort fix, the Processes `QTreeWidget` still lost expansion state on every 100 ms update tick — expanded groups/PIDs collapsed again, making the tree unreadable.
