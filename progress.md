@@ -1,26 +1,29 @@
 # LikeTaskManager — Progress
 
-## 2026-10-23: Fix AppImage built-in autoupdate — bundle `appimageupdate` via linuxdeploy-plugin-appimage
+## 2026-10-23: Fix AppImage built-in autoupdate — bundle `appimageupdate` (2nd attempt: dead URL fix)
 
-**Objective:** AppImage's built-in autoupdate failed at runtime with
-`ERROR: FAILED appimageupdate not packaged` because the bundle contained no
-`appimageupdate` AppImage.
+**Objective:** CI run failed with `ERROR: FAILED appimageupdate not found in bundle` —
+the `Download appimageupdatetool` step downloaded a 404 HTML page instead of the
+real AppImage because the `probonopd/linuxdeploy-plugin-appimage` GitHub repository
+**has been deleted**.
 
-**Root cause:** The workflow downloaded only `linuxdeployqt`. The `appimageupdate`
-binary is bundled by the separate `linuxdeploy-plugin-appimage` plugin
-(`appimageupdatetool`), which linuxdeployqt auto-detects *only* when
-`appimageupdatetool.AppImage` sits next to it in the working directory.
+**Root cause:** The URL
+`https://github.com/probonopd/linuxdeploy-plugin-appimage/releases/download/continuous/appimageupdatetool-continuous-x86_64.AppImage`
+returns HTTP 404. `curl -sL` silently writes a 9-byte "Not Found" page.
+`chmod +x` succeeds on it. linuxdeployqt can't load it as a plugin, so
+`appimageupdate` is never bundled. The verify step (added in commit `c7dfe26`)
+correctly caught this.
 
 **Fix (`.github/workflows/build-appimage.yml` only):**
-- New step **Download appimageupdatetool** — fetches
-  `https://github.com/probonopd/linuxdeploy-plugin-appimage/releases/download/continuous/appimageupdatetool-continuous-x86_64.AppImage`
-  and `chmod +x` it, alongside the linuxdeployqt download.
-- New step **Verify appimageupdate is bundled** — extracts the finished AppImage
-  and fails the build if `squashfs-root/appimageupdate` is missing (guards
-  against regression of the exact reported error).
+- Updated **Download appimageupdatetool** step to use the new URL:
+  `https://github.com/AppImageCommunity/AppImageUpdate/releases/download/continuous/appimageupdatetool-x86_64.AppImage`
+  (verified HTTP 200, ~36 MB).
+- Added `-f` flag to `curl` so HTTP errors are not silently written to the file.
+- Added a **size guard**: if the downloaded file is < 10 MB, fail the build
+  immediately with a clear error message (prevents future silent 404 regressions).
 
-**Validation:** YAML parsed OK (`python3 -c 'yaml.safe_load(...)'`).
-Full validation happens on the next CI run (push or tag). Not committed yet.
+**Validation:** YAML parsed OK. URL verified live (HTTP 200, 36 456 952 bytes).
+**Status:** Pending commit & push to `origin/master`.
 
 ## 2026-10-23: Preserve tree expansion across update ticks (regression from Bug B fix)
 

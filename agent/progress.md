@@ -1,6 +1,16 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
-## 2026-10-23: AppImage autoupdate fix — bundle `appimageupdate` in CI
+## 2026-10-23: AppImage autoupdate fix — 2nd attempt: dead download URL
+- **Bug:** CI failed: `ERROR: FAILED appimageupdate not found in bundle`.
+- **Root cause:** `probonopd/linuxdeploy-plugin-appimage` GitHub repo has been
+  **deleted** (404). `curl -sL` silently wrote a 9-byte "Not Found" page;
+  linuxdeployqt couldn't load it as a plugin.
+- **Fix:** Updated download URL to
+  `https://github.com/AppImageCommunity/AppImageUpdate/releases/download/continuous/appimageupdatetool-x86_64.AppImage`
+  (verified HTTP 200, ~36 MB). Added `curl -f` + size guard (< 10 MB → fail).
+- **Status:** Pending commit & push.
+
+## 2026-10-23: AppImage autoupdate fix — bundle `appimageupdate` in CI (1st attempt)
 - **Bug:** AppImage built-in autoupdate failed: `ERROR: FAILED appimageupdate not packaged`.
 - **Root cause:** only `linuxdeployqt` was downloaded; the `appimageupdatetool`
   plugin (which bundles `appimageupdate`) was missing next to it.
@@ -8,7 +18,8 @@
   appimageupdatetool** (continuous x86_64 from linuxdeploy-plugin-appimage
   releases); new step **Verify appimageupdate is bundled** (extracts AppImage,
   fails build if `squashfs-root/appimageupdate` is absent).
-- **Verification:** YAML parses. Full check on next CI run. Not committed.
+- **Verification:** YAML parses. **Committed & pushed to `origin/master`
+  (`c7dfe26`)** — CI run validates bundling + verify step.
 
 ## 2026-10-23: Fix expansion state lost on every update tick
 - **Bug:** `takeTopLevelItem()` in `ProcessSortTree::sortByColumn()` collapses the item

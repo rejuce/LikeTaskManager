@@ -179,7 +179,8 @@ QT_QPA_PLATFORM=offscreen /tmp/ltm-cmake/LikeTaskManager   # headless smoke test
 | `dc606c5` | Symlink `qmake6`→`qmake` in `/usr/local/bin` (Qt5 is default on ubuntu-22.04) |
 | `25e1878` | `chmod +x` AppImage after bundling (linuxdeployqt omits exec bit) |
 | `88afb77` | Smoke test: `--appimage-extract` + run `AppRun` (no FUSE on GH runners) |
-| (pending) | **Autoupdate fix:** download `appimageupdatetool.AppImage` (linuxdeploy-plugin-appimage) next to linuxdeployqt so `appimageupdate` gets bundled; verify step extracts AppImage and fails if `appimageupdate` is missing (fixes `ERROR: FAILED appimageupdate not packaged`) |
+| `c7dfe26` | **Autoupdate fix (1st):** download `appimageupdatetool.AppImage` next to linuxdeployqt; verify step extracts AppImage and fails if `appimageupdate` is missing |
+| (pending) | **Autoupdate fix (2nd):** old `probonopd/linuxdeploy-plugin-appimage` repo deleted → 404. New URL: `AppImageCommunity/AppImageUpdate/releases/.../appimageupdatetool-x86_64.AppImage`. Added `curl -f` + size guard |
 
 ### Build Environment (OpenTerminal container, Debian 13)
 - **Qt 6.8.2** via apt (`qt6-base-dev`, `libqt6network6`, `libqt6widgets6`, `qt6-svg-dev`, `qt6-l10n-tools`)

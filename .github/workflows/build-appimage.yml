@@ -124,9 +124,18 @@ jobs:
       # ------------------------------------------------------------------
       - name: Download appimageupdatetool
         run: |
-          curl -sL -o appimageupdatetool.AppImage \
-            https://github.com/probonopd/linuxdeploy-plugin-appimage/releases/download/continuous/appimageupdatetool-continuous-x86_64.AppImage
+          # The old probonopd/linuxdeploy-plugin-appimage repo has been deleted.
+          # appimageupdatetool is now released from AppImageCommunity/AppImageUpdate.
+          curl -sfL -o appimageupdatetool.AppImage \
+            https://github.com/AppImageCommunity/AppImageUpdate/releases/download/continuous/appimageupdatetool-x86_64.AppImage
           chmod +x appimageupdatetool.AppImage
+          # Guard: ensure the download is a real AppImage (≥ 10 MB), not a 404 page.
+          SIZE=$(stat -c%s appimageupdatetool.AppImage 2>/dev/null || echo 0)
+          if [ "$SIZE" -lt 10000000 ]; then
+            echo "::error::appimageupdatetool.AppImage is only ${SIZE} bytes — download likely failed"
+            exit 1
+          fi
+          echo "appimageupdatetool.AppImage downloaded: ${SIZE} bytes"
 
       - name: Ensure qmake points to Qt6
         run: |
