@@ -1,5 +1,28 @@
 # LikeTaskManager — Progress
 
+## 2026-10-23: Preserve tree expansion across update ticks (regression from Bug B fix)
+
+**Objective:** After the numeric-sort fix, the Processes `QTreeWidget` still lost expansion state on every 100 ms update tick — expanded groups/PIDs collapsed again, making the tree unreadable.
+
+**Root cause:** `ProcessSortTree::sortByColumn()` reorders by `takeTopLevelItem()` + `addTopLevelItem()`. Qt's `takeTopLevelItem()` **collapses the taken item AND all its descendants**. Since `handle_process_data()` → `applyNumericSort()` runs every tick, every group row was collapsed on every tick.
+
+**Fix (processsorttree.cpp):**
+- Before removing items, **recursively** save every item's `isExpanded()` into a `QHash<QTreeWidgetItem*, bool>` (top-level groups and all their PID children).
+- After re-adding in sorted order, **recursively** restore each item's saved expansion state.
+- `sortByColumn()` made `public` (was private) so it can be unit-tested directly.
+
+**New test (tests/t_processsorttree.cpp, 6 cases):**
+- numeric sort ascending/descending (UserRole doubles)
+- top-level expansion preserved after sort
+- child (PID) expansion preserved after sort
+- no-op / single-item case
+- `processsorttree.cpp` added to `ltm_testlib` in `tests/CMakeLists.txt`
+
+**Verification:**
+- Full Release build succeeds (CMake + Ninja)
+- All 9 test suites pass (`ctest`), 73 test functions incl. 6 new `t_processsorttree`
+- **Status:** Complete. Pending: commit & push to `master`.
+
 ## 2026-10-22: QTreeWidget fixes — numeric column sort + preserve expansion state (Bug A & B)
 
 **Objective:** Fix two bugs in the Processes tab `QTreeWidget`:

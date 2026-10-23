@@ -21,12 +21,14 @@ public:
     /// Call this after updating item values in handle_process_data().
     void applyNumericSort();
 
+    /// Sort top-level items by the given column and order (preserves expansion).
+    void sortByColumn(int column, Qt::SortOrder order);
+
     int sortColumn() const { return m_sortColumn; }
     Qt::SortOrder sortOrder() const { return m_sortOrder; }
 
 private:
     void onSectionClicked(int logicalIndex);
-    void sortByColumn(int column, Qt::SortOrder order);
 
     int m_sortColumn = 0;
     Qt::SortOrder m_sortOrder = Qt::AscendingOrder;

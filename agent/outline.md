@@ -60,6 +60,7 @@ LikeTaskManager/
 │   ├── t_diskreader.cpp      # 8 tests — disk discovery, find_disk_name_in_data
 │   ├── t_networkreader.cpp   # 9 tests — iface discovery, byte counters
 │   ├── t_processreader.cpp   # 8 tests — process list, nethogs graceful failure
+│   ├── t_processsorttree.cpp # 6 tests — numeric sort + expansion preservation
 │   └── t_widgets.cpp         # 14 tests — PerfItemWidget + CPU/RAM/Disk/Network widgets
 ├── Jenkinsfile               # CI pipeline config (legacy qmake — superseded by GitHub Actions)
 ├── .github/workflows/
@@ -114,14 +115,14 @@ ItemWidgets (QwtPlot curves) + static labels
 | `NetworkItemWidget` | `networkitemwidget.h/.cpp` | Network tab UI: per-iface tx/rx, link speed, QwtPlot. |
 | `PerfItemWidget` | `perfitemwidget.h/.cpp` | Process list item widget. |
 | **Process tab (QTreeWidget)** | `ltm.cpp` `handle_process_data()` | Groups by name, expandable per-PID children. Kill button kills group or single PID. Items updated in-place (no clear+rebuild). |
-| `ProcessSortTree` | `processsorttree.h/.cpp` | QTreeWidget subclass with manual numeric column sort. Built-in sort always disabled; `std::stable_sort` on `UserRole` doubles. Header clicks via `sectionPressed`. `applyNumericSort()` called each update cycle. |
+| `ProcessSortTree` | `processsorttree.h/.cpp` | QTreeWidget subclass with manual numeric column sort. Built-in sort always disabled; `std::stable_sort` on `UserRole` doubles. Header clicks via `sectionPressed`. `applyNumericSort()` called each update cycle. `sortByColumn()` recursively saves/restores expansion state (Qt's `takeTopLevelItem` collapses items + descendants). |
 
 ### Qt Modules Used
 - `core`, `gui`, `widgets`, `network`, `test` (Qt6::Core/Gui/Widgets/Network/Test)
 - External: **Qwt 6.3.0** (plotting, located via `find_path`/`find_library`, `-DQWT_ROOT` supported), **libnethogs** (per-process network stats)
 
-### Unit Test Infrastructure (DONE 2026-10-19)
-- **7 test executables**, 68 test functions, all passing via `ctest`
+### Unit Test Infrastructure (DONE 2026-10-19, extended 2026-10-23)
+- **9 test executables**, 73 test functions, all passing via `ctest`
 - Shared static lib `ltm_testlib` compiles reader + widget sources (no GUI app dependency)
 - Private member access via `friend class Test<X>` declarations in headers
 - Widget tests run offscreen: `QT_QPA_PLATFORM=offscreen`

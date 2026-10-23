@@ -1,5 +1,15 @@
 # Progress Log — LikeTaskManager (Qt6 CMake Migration)
 
+## 2026-10-23: Fix expansion state lost on every update tick
+- **Bug:** `takeTopLevelItem()` in `ProcessSortTree::sortByColumn()` collapses the item
+  AND all descendants. Since `applyNumericSort()` runs every 100 ms, every group/PID
+  was collapsed on every tick.
+- **Fix:** Recursively save `isExpanded()` for all items before reordering, restore
+  after re-adding. `sortByColumn()` made public for testability.
+- **New test:** `tests/t_processsorttree.cpp` — 6 test cases (numeric sort asc/desc,
+  top-level + child expansion preservation, single-item no-op).
+- **Verification:** All 9 test suites / 73 functions pass. Build succeeds.
+
 ## Issue #12 — group the same app processes (IMPLEMENTED 2026-10-22)
 - **Goal:** collapse multiple processes with the same executable name into one row
   (summed CPU/mem/disk/net + process count), with expandable per-PID children.

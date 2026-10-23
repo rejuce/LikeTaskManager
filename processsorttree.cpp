@@ -1,6 +1,8 @@
 #include "processsorttree.h"
 #include <QHeaderView>
+#include <QHash>
 #include <algorithm>
+#include <functional>
 
 ProcessSortTree::ProcessSortTree(QWidget* parent)
     : QTreeWidget(parent)
@@ -75,12 +77,37 @@ void ProcessSortTree::sortByColumn(int column, Qt::SortOrder order)
     }
 
     // Reorder in-place.  Sorting is disabled, so addTopLevelItem won't
-    // trigger any built-in re-sort.  takeTopLevelItem does NOT delete —
-    // expansion state is preserved.
+    // trigger any built-in re-sort.
+    //
+    // QTreeWidget::takeTopLevelItem() collapses the taken item AND all
+    // its descendants (Qt behaviour), so we must recursively save every
+    // item's expansion state before removing and restore it afterwards —
+    // otherwise every update tick would collapse all groups and PIDs,
+    // making the tree unreadable.
+    QHash<QTreeWidgetItem*, bool> wasExpanded;
+    std::function<void(QTreeWidgetItem*)> saveExpansion =
+        [&](QTreeWidgetItem* item) {
+            wasExpanded.insert(item, item->isExpanded());
+            for (int i = 0; i < item->childCount(); ++i)
+                saveExpansion(item->child(i));
+        };
+    for (auto* item : items)
+        saveExpansion(item);
+
     setUpdatesEnabled(false);
     while (topLevelItemCount() > 0)
         takeTopLevelItem(0);
     for (auto* item : items)
         addTopLevelItem(item);
+
+    std::function<void(QTreeWidgetItem*)> restoreExpansion =
+        [&](QTreeWidgetItem* item) {
+            item->setExpanded(wasExpanded.value(item, false));
+            for (int i = 0; i < item->childCount(); ++i)
+                restoreExpansion(item->child(i));
+        };
+    for (auto* item : items)
+        restoreExpansion(item);
+
     setUpdatesEnabled(true);
 }
